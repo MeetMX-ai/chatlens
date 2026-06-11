@@ -69,6 +69,7 @@ def _wait_for_ready(proc, timeout=5):
             return
         if proc.poll() is not None:
             raise RuntimeError(f"dummy process exited early: {proc.returncode}")
+        time.sleep(0.01)
     raise TimeoutError("dummy process did not print READY in time")
 
 
