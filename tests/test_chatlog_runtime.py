@@ -242,6 +242,7 @@ class TestStopChatlogServer(unittest.TestCase):
         rt.stop_chatlog_server()  # 应该不抛异常
         self.assertIsNone(rt._chatlog_process)
 
+    @pytest.mark.skipif(not hasattr(signal, 'CTRL_BREAK_EVENT'), reason="Windows-only signal")
     @patch('sys.platform', 'win32')
     def test_normal_stop_windows(self):
         proc = MagicMock()
