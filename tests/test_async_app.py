@@ -794,7 +794,7 @@ class TestAIAnalysisExtended:
         assert resp.status_code == 200
         assert resp.json()['success'] is True
         # H1 修复：路由多传 use_ide 默认值
-        web.get_ai_analysis.assert_called_once_with('g1', use_rules=True, use_ide=False)
+        web.get_ai_analysis.assert_called_once_with('g1', use_rules=True, use_ide=False, start_date='', end_date='')
 
     def test_ai_analysis_with_use_rules_false(self):
         """AI 分析传入 use_rules=False 应正确传递参数"""
@@ -802,7 +802,7 @@ class TestAIAnalysisExtended:
         client = _create_client(web=web)
         resp = client.post('/api/analysis/ai', json={'group_name': 'g1', 'use_rules': False})
         assert resp.status_code == 200
-        web.get_ai_analysis.assert_called_once_with('g1', use_rules=False, use_ide=False)
+        web.get_ai_analysis.assert_called_once_with('g1', use_rules=False, use_ide=False, start_date='', end_date='')
 
     def test_ai_analysis_default_use_rules(self):
         """AI 分析不传 use_rules 应默认为 False"""
@@ -810,7 +810,7 @@ class TestAIAnalysisExtended:
         client = _create_client(web=web)
         resp = client.post('/api/analysis/ai', json={'group_name': 'g1'})
         assert resp.status_code == 200
-        web.get_ai_analysis.assert_called_once_with('g1', use_rules=False, use_ide=False)
+        web.get_ai_analysis.assert_called_once_with('g1', use_rules=False, use_ide=False, start_date='', end_date='')
 
     def test_ai_analysis_empty_group_name(self):
         """AI 分析不传 group_name 应默认为空字符串"""
@@ -818,7 +818,7 @@ class TestAIAnalysisExtended:
         client = _create_client(web=web)
         resp = client.post('/api/analysis/ai', json={})
         assert resp.status_code == 200
-        web.get_ai_analysis.assert_called_once_with('', use_rules=False, use_ide=False)
+        web.get_ai_analysis.assert_called_once_with('', use_rules=False, use_ide=False, start_date='', end_date='')
 
     def test_ai_analysis_passes_use_ide(self):
         """H1 修复：AI 分析可显式传 use_ide"""
@@ -826,7 +826,7 @@ class TestAIAnalysisExtended:
         client = _create_client(web=web)
         resp = client.post('/api/analysis/ai', json={'group_name': 'g1', 'use_ide': True})
         assert resp.status_code == 200
-        web.get_ai_analysis.assert_called_once_with('g1', use_rules=False, use_ide=True)
+        web.get_ai_analysis.assert_called_once_with('g1', use_rules=False, use_ide=True, start_date='', end_date='')
 
 
 # ═══════════════════════════════════════════════════════════
@@ -872,7 +872,7 @@ class TestLoadDataFailure:
         client = _create_client(web=web)
         resp = client.post('/api/chatlog/load', json={'talker': 'g1', 'limit': 50})
         assert resp.status_code == 200
-        web.load_from_chatlog.assert_called_once_with('g1', 50)
+        web.load_from_chatlog.assert_called_once_with('g1', 50, start_date='', end_date='')
 
     def test_load_default_limit(self):
         """不传 limit 应默认为 0"""
@@ -880,7 +880,7 @@ class TestLoadDataFailure:
         client = _create_client(web=web)
         resp = client.post('/api/chatlog/load', json={'talker': 'g1'})
         assert resp.status_code == 200
-        web.load_from_chatlog.assert_called_once_with('g1', 0)
+        web.load_from_chatlog.assert_called_once_with('g1', 0, start_date='', end_date='')
 
 
 # ═══════════════════════════════════════════════════════════

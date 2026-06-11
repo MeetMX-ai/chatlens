@@ -109,8 +109,8 @@ class TestGetStatsCacheExpiry:
         ga = _mock_ga()
         orch = AnalysisOrchestrator(ga)
         orch.get_stats('group_a')
-        # 手动将缓存时间设为过期
-        orch._stats_cache_time['group_a'] = time.time() - _CACHE_TTL - 1
+        # 手动将缓存时间设为过期（key 现在是元组格式）
+        orch._stats_cache_time[('group_a', '', '')] = time.time() - _CACHE_TTL - 1
         result = orch.get_stats('group_a')
         assert result['success'] is True
         # 过期后被清理，应重新调用 analyze
@@ -121,12 +121,12 @@ class TestGetStatsCacheExpiry:
         ga = _mock_ga()
         orch = AnalysisOrchestrator(ga)
         orch.get_stats('group_a')
-        # 让 group_a 过期
-        orch._stats_cache_time['group_a'] = time.time() - _CACHE_TTL - 1
+        # 让 group_a 过期（key 现在是元组格式）
+        orch._stats_cache_time[('group_a', '', '')] = time.time() - _CACHE_TTL - 1
         # 查询 group_b，应清理 group_a
         orch.get_stats('group_b')
-        assert 'group_a' not in orch._stats_cache
-        assert 'group_a' not in orch._stats_cache_time
+        assert ('group_a', '', '') not in orch._stats_cache
+        assert ('group_a', '', '') not in orch._stats_cache_time
 
 
 # ── auto_analyze — AI 分析 / 规则分析 ─────────────────────────
@@ -432,10 +432,10 @@ class TestInvalidateCacheExtended:
         ga = _mock_ga()
         orch = AnalysisOrchestrator(ga)
         orch.get_stats('group_a')
-        assert 'group_a' in orch._stats_cache
+        assert ('group_a', '', '') in orch._stats_cache
         orch.invalidate_cache('group_a')
-        assert 'group_a' not in orch._stats_cache
-        assert 'group_a' not in orch._stats_cache_time
+        assert ('group_a', '', '') not in orch._stats_cache
+        assert ('group_a', '', '') not in orch._stats_cache_time
 
     def test_clears_rule_cache(self):
         """应清除 rule 缓存"""

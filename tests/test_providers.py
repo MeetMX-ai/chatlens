@@ -21,7 +21,7 @@ class FakeProvider:
     def get_groups(self):
         return ['fake_group_1', 'fake_group_2']
 
-    def get_messages(self, talker, limit=0):
+    def get_messages(self, talker, limit=0, start_date="", end_date=""):
         msgs = [ChatMessage(
             sender='fake_user', content='fake message', msg_type='text',
             msg_attr='', timestamp='2026-01-01 12:00:00', group_name='fake_group',
