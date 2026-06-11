@@ -170,40 +170,6 @@ wxcli health
 | `schedule_task_trigger` | 触发定时任务 |
 | `schedule_task_delete` | 删除定时任务 |
 
-## ⚙️ 配置
-
-配置文件位于 `config/config.json`（首次运行自动生成）：
-
-```json
-{
-  "ai_service": {
-    "provider": "deepseek",
-    "api_key": "",
-    "base_url": "https://api.deepseek.com/v1",
-    "model": "deepseek-chat"
-  },
-  "server": {
-    "host": "localhost",
-    "port": 8080
-  },
-  "chatlog": {
-    "api_base": "http://localhost:5030"
-  }
-}
-```
-
-### AI 分析配置
-
-支持以下 AI 服务商：
-
-| Provider | base_url | model |
-|----------|----------|-------|
-| deepseek | `https://api.deepseek.com/v1` | `deepseek-chat` |
-| openai | `https://api.openai.com/v1` | `gpt-4o-mini` |
-| zhipu | `https://open.bigmodel.cn/api/paas/v4` | `glm-4-flash` |
-
-不配置 API Key 时，自动降级为 **Ollama 本地模型** → **规则分析**。
-
 ## 📁 项目结构
 
 ```
