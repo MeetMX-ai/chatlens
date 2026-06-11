@@ -78,7 +78,7 @@ jobs:
       - name: Pytest (e2e)
         run: |
           python -m pytest tests/e2e -q --tb=line --no-header \
-            -n auto --timeout=120 \
+            --timeout=120 \
             --junitxml=test-results.xml
 
       - name: Upload test results (JUnit XML)
