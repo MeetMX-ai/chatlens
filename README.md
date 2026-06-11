@@ -1,12 +1,5 @@
 # ChatLens
 
-[![CI](https://github.com/MeetMX-ai/chatlens/actions/workflows/ci.yml/badge.svg)](https://github.com/MeetMX-ai/chatlens/actions/workflows/ci.yml)
-
-> 🔍 **AI-powered lens into your WeChat group chats.**
-> 基于 chatlog 解密数据，对微信群聊进行智能分析并生成精美报告。
-
-支持 **Web 界面**、**命令行 (CLI)**、**MCP 服务器** 三种使用方式。
-
 ## ✨ 功能特性
 
 - 🔓 **数据解密** — 自动调用 chatlog 解密微信本地数据库
@@ -22,6 +15,15 @@
 - 🔌 **MCP 服务器** — 可在 Trae / Claude Code / Cursor 等 IDE 中直接调用分析功能
 - 🧩 **多平台架构** — `MessageProvider` 协议抽象数据源，核心引擎与平台完全解耦
 - 🧪 **测试覆盖** — 完整 pytest 套件（0 失败）+ perf-scan 性能反模式扫描
+
+---
+
+[![CI](https://github.com/MeetMX-ai/chatlens/actions/workflows/ci.yml/badge.svg)](https://github.com/MeetMX-ai/chatlens/actions/workflows/ci.yml)
+
+> 🔍 **AI-powered lens into your WeChat group chats.**
+> 基于 chatlog 解密数据，对微信群聊进行智能分析并生成精美报告。
+
+支持 **Web 界面**、**命令行 (CLI)**、**MCP 服务器** 三种使用方式。
 
 ## 📋 前置要求
 
