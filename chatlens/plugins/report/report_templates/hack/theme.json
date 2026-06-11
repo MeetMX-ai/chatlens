@@ -1,0 +1,8 @@
+{
+  "name": "hack",
+  "display_name": "赛博朋克",
+  "description": "暗色终端风格，程序员专属",
+  "colors": ["#00ff41", "#0d1117", "#f778ba", "#161b22"],
+  "preview_bg": "#0d1117",
+  "preview_accent": "#00ff41"
+}

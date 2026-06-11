@@ -1,0 +1,8 @@
+{
+  "name": "scrapbook",
+  "display_name": "手账风",
+  "description": "暖色手账风格，适合日常群聊记录",
+  "colors": ["#8b5e3c", "#d4a853", "#e07850", "#faf5ee"],
+  "preview_bg": "#faf5ee",
+  "preview_accent": "#d4a853"
+}

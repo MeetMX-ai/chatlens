@@ -1,0 +1,48 @@
+# =============================================================================
+# ChatLens Prometheus 配置 (G4-2.3)
+# -----------------------------------------------------------------------------
+# 用途：抓取 chatlens 服务暴露的 /metrics 端点
+# 注意：当前 chatlens 未实现 Prometheus client（避免引新 pip 依赖）。
+#       本配置先就位，等后续 batch 加 prometheus-client 时开箱即用。
+# =============================================================================
+
+global:
+  scrape_interval: 15s          # 默认 15s 抓取一次
+  evaluation_interval: 15s      # 规则评估间隔
+  external_labels:
+    monitor: "chatlens-monitor"
+
+# ── 告警规则（占位；用户可按需添加 alerting_rules.yml）────────────────
+rule_files:
+  # - "alerts.yml"
+
+# ── Alertmanager（占位；用户可加 alertmanager 服务）────────────────────
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ["alertmanager:9093"]
+
+# ── 抓取目标 ──────────────────────────────────────────────────────────
+scrape_configs:
+  # ChatLens 主服务
+  - job_name: "chatlens"
+    metrics_path: "/metrics"
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    static_configs:
+      - targets:
+          - "chatlens:8080"
+        labels:
+          service: "chatlens"
+          env: "production"
+
+  # Prometheus 自身（自带 metrics）
+  - job_name: "prometheus"
+    static_configs:
+      - targets:
+          - "localhost:9090"
+
+  # Grafana 自身（可选：需开启 metrics）
+  # - job_name: "grafana"
+  #   static_configs:
+  #     - targets: ["grafana:3000"]

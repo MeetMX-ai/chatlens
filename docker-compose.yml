@@ -1,0 +1,123 @@
+# =============================================================================
+# ChatLens docker-compose.yml (G4-2.3)
+# -----------------------------------------------------------------------------
+# 4 个 service（默认只起 chatlens）：
+#   - chatlens          : 主服务（必须）
+#   - chatlog           : chatlog_alpha 占位（profile=with-chatlog，按需启用）
+#   - prometheus        : 监控（profile=monitoring）
+#   - grafana           : 可视化（profile=monitoring）
+#
+# profiles 设计：
+#   - 默认 `docker compose up -d` → 只起 chatlens（轻量）
+#   - `docker compose --profile monitoring up -d` → + prometheus + grafana
+#   - `docker compose --profile with-chatlog up -d` → + chatlog 占位
+# =============================================================================
+
+services:
+  # ──────────────────────────────────────────────────────────────────────
+  # 主服务：ChatLens Web（端口 8080）
+  # ──────────────────────────────────────────────────────────────────────
+  chatlens:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chatlens:1.0.0
+    container_name: chatlens
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # 配置文件：ro 挂载，方便在 host 编辑
+      - ./config:/app/config:ro
+      # 报告：rw 挂载，host 可直接查看
+      - ./reports:/app/reports:rw
+      # 日志：named volume，跨容器迁移友好
+      - chatlens-logs:/app/logs:rw
+    environment:
+      - CHATLENS_LOG_FORMAT=json
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1
+    # 健康检查：与 Dockerfile HEALTHCHECK 对齐
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - chatlens-net
+
+  # ──────────────────────────────────────────────────────────────────────
+  # chatlog_alpha：占位（默认不起；用户用 profile 启用）
+  # 实际部署时把 image / environment / volumes 换成真实 chatlog 配置
+  # ──────────────────────────────────────────────────────────────────────
+  chatlog:
+    image: ghcr.io/sophon/chatlog:latest  # 占位；用户替换为真实镜像
+    container_name: chatlens-chatlog
+    profiles: ["with-chatlog"]  # 默认不起，需要时 --profile with-chatlog
+    restart: unless-stopped
+    # ports:
+    #   - "5030:5030"  # chatlog 默认 5030
+    # volumes:
+    #   - chatlog-data:/data
+    networks:
+      - chatlens-net
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Prometheus：抓取 chatlens /metrics
+  # ──────────────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: chatlens-prometheus
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+    depends_on:
+      chatlens:
+        condition: service_started
+    networks:
+      - chatlens-net
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Grafana：可视化（默认 admin / admin，首次登录会强制改密码）
+  # ──────────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: chatlens-grafana
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - chatlens-net
+
+# ──────────────────────────────────────────────────────────────────────────
+# 持久化卷
+# ──────────────────────────────────────────────────────────────────────────
+volumes:
+  chatlens-logs:
+  prometheus-data:
+  grafana-data:
+
+# ──────────────────────────────────────────────────────────────────────────
+# 网络（独立 bridge，避免与 host 网络冲突）
+# ──────────────────────────────────────────────────────────────────────────
+networks:
+  chatlens-net:
+    driver: bridge
+    name: chatlens-net

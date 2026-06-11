@@ -1,0 +1,148 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project runtime
+config/config.json
+chatlens/config/config.json
+config/scheduled_tasks.json
+config/logs/
+data/
+reports/
+output/
+*.db
+
+# chatlog (user downloads separately)
+chatlog_alpha/
+
+# MCP config (user-specific)
+.mcp.json
+
+# Specs (development only)
+specs/
+
+# Debug / test scripts
+analyze_blank.py
+analyze_pixels.py
+analyze_pixels2.py
+check_bottom.py
+check_extra.py
+debug_crop.py
+fetch_messages.py
+font_test.py
+gen_full_report.py
+gen_report.py
+/test_*.py
+verify_clean.py
+_audit.py
+
+# Dev tools
+scripts/freeze-ac.js
+
+# wxauto (removed dependency)
+wxauto/
+
+# ====================== Node / TypeScript 子项目 ======================
+node_modules/
+dist/
+*.tsbuildinfo
+.npm
+.eslintcache
+
+# ====================== 运行日志 & 临时输出 ======================
+# 后端运行时输出文件
+*.err
+*.out
+*.log
+chatlens_8080.*
+chatlens_server.log
+chatlens_server.err.log
+chatlens_server.out.log
+chatlens_server.err
+chatlens_server.out
+chatlens_server.pid
+chatlog.err
+chatlog.out
+chatlog.pid
+logs_web.err
+logs_web.out
+logs_web.pid
+log/
+logs/
+
+# 测试输出 / pytest 临时文件
+pytest_output.log
+full_test_output.txt
+full_test_v*.txt
+g4_1_2_test_run.log
+entry_test_*.out
+flaky_test.txt
+img_test.txt
+test_4_3_*.txt
+test_*.log
+*.pid
+.coverage
+.coverage.*
+
+# ====================== 临时调试脚本（一次性使用） ======================
+tmp_*.py
+tmp_*.log
+verify_*.py
+verify_*.txt
+verify_*.log
+verify_*_run.txt
+verify_out.txt
+g4_*.py
+g4_smoke*.py
+quick_check.py
+find_hang.py
+dummy_*.py
+freeze_hash*.py
+check_quotes.py
+sse_test_launcher.py
+sse_verify.py
+sse_test_*.py
+test_404.py
+test_shutdown.py
+test_shutdown_real.py
+test_modelscope.py
+test.html
+tmp_test_exit_code.py
+tmp_tara_*.log
+tmp_gen_tara_*.py
+
+# Chrome 调试启动脚本
+restart-chrome-with-cdp.bat
+restart-chrome-with-cdp.ps1
+
+# 根目录遗留的一次性脚本
+/run_verify.py
+/test_run_x.txt

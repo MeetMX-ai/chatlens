@@ -1,0 +1,24 @@
+{
+  "_comment": "ChatLens 配置文件 - 请将本文件复制为 config/config.json 后按需修改。AI 分析需要有效 API Key，可通过 Web UI 的'设置'页面在线配置（保存在 chatlens/config/config.json）。",
+  "ai_service": {
+    "_comment": "ai_service.api_key 为空字符串表示未配置（占位符），所有 AI 分析会回退到规则引擎。请通过 Web UI 的'设置'页面填入真实 Key。",
+    "provider": "deepseek",
+    "api_key": "",
+    "base_url": "https://api.deepseek.com/v1",
+    "model": "deepseek-chat",
+    "temperature": 0.7,
+    "max_tokens": 4096
+  },
+  "server": {
+    "host": "localhost",
+    "port": 8080
+  },
+  "chatlog": {
+    "api_base": "http://localhost:5030",
+    "webhook_url": "http://localhost:8080/webhook/wechat"
+  },
+  "ilink": {
+    "enabled": true,
+    "bot_token": ""
+  }
+}

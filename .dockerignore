@@ -1,0 +1,101 @@
+# =============================================================================
+# ChatLens .dockerignore (G4-2.3)
+# -----------------------------------------------------------------------------
+# 目标：最小化 docker build context 体积（提速构建 + 防敏感信息泄露）
+# 约束：不破坏 docker build / docker compose 必需的最小文件
+# =============================================================================
+
+# ── Python 缓存 / 临时文件 ─────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# ── 虚拟环境 ──────────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── 仓库元信息 ────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+.github/
+.gitlab-ci.yml
+.editorconfig
+
+# ── IDE / 编辑器 ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── 运行时产物 / 日志（容器内会重新生成）────────────────────────────────
+logs/
+reports/
+output/
+data/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+*.pid
+
+# ── 本地环境 / 凭证（绝不能进镜像）──────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+*.crt
+secrets/
+chatlens/config/ilink_token.json
+chatlens/config/scheduled_tasks.json
+chatlens/config/config.json
+
+# ── 单元测试 / 临时验证脚本（不进生产镜像）──────────────────────────────
+tests/
+test_*.py
+*_test.py
+freeze_hash*.py
+run_verify.py
+verify_*.txt
+verify_*.py
+full_test_*.txt
+test_run_*.txt
+test_4_3_*.txt
+img_test.txt
+flaky_test.txt
+tmp_test_exit_code.py
+logs_web.err
+logs_web.out
+chatlog.pid
+conftest.py
+
+# ── docs 目录（本地阅读用，不需要进镜像）────────────────────────────────
+docs/
+
+# ── specs 验证目录：保留 specs/verify.py 与 specs/goal.md 的可达性 ──────
+# （Dockerfile 主动 COPY specs/，是为了容器内能跑 verify.py）
+# 排除具体 batch 下的 tests/ 子目录（避免把 spec tests 拉进镜像）
+specs/**/tests/
+
+# ── 其它 ────────────────────────────────────────────────────────────────
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
+chatlens-ts/
+scripts/
+docker/

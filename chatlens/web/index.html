@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信群聊分析</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&family=JetBrains+Mono:wght@400&display=swap" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css?v=2.0">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span>群聊分析</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    <span>数据概览</span>
+                </a>
+                <a href="#" class="nav-item" data-page="ai">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"/></svg>
+                    <span>AI 分析</span>
+                </a>
+                <a href="#" class="nav-item" data-page="datasource">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                    <span>数据源</span>
+                </a>
+                <a href="#" class="nav-item" data-page="reports">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>报告历史</span>
+                </a>
+                <a href="#" class="nav-item" data-page="compare">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span>多群对比</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>设置</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="chatlog-status" id="chatlogStatus">
+                    <span class="status-dot inactive"></span>
+                    <span class="status-text">chatlog: 未检测</span>
+                </div>
+                <div class="chatlog-status" id="mcpStatus">
+                    <span class="status-dot inactive"></span>
+                    <span class="status-text">MCP: 未检测</span>
+                </div>
+                <div class="chatlog-status" id="aiStatus">
+                    <span class="status-dot inactive"></span>
+                    <span class="status-text">AI: 未检测</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 id="pageTitle">数据概览</h1>
+                    <div class="group-selector">
+                        <select id="groupSelect">
+                            <option value="">选择群聊</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="btn btn-outline" id="btnRefresh" title="刷新数据">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        刷新
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content" id="pageContent">
+                <div class="page active" id="page-dashboard">
+                    <div class="welcome-guide" id="welcomeGuide">
+                        <div class="welcome-header">
+                            <div class="welcome-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            </div>
+                            <div>
+                                <h2>欢迎使用群聊分析</h2>
+                                <p>三步轻松生成群聊报告，跟着指引开始吧</p>
+                            </div>
+                        </div>
+                        <div class="welcome-steps">
+                            <div class="welcome-step" id="welcomeStep1" data-action="goto-datasource">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <div class="step-title">选择群聊</div>
+                                    <div class="step-desc">从数据源中选择要分析的微信群聊</div>
+                                </div>
+                                <svg class="step-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                            </div>
+                            <div class="welcome-step" id="welcomeStep2">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <div class="step-title">查看分析</div>
+                                    <div class="step-desc">自动生成消息统计、成员排名、趋势图表</div>
+                                </div>
+                                <svg class="step-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                            </div>
+                            <div class="welcome-step" id="welcomeStep3">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <div class="step-title">生成报告</div>
+                                    <div class="step-desc">一键生成精美 HTML / 图片 / PDF 报告</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-grid" id="statsGrid" style="display:none">
+                        <div class="stat-card"><div class="stat-icon" style="--accent:#e88d5c"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="stat-info"><span class="stat-value" id="statTotalMsg">0</span><span class="stat-label">消息总数</span></div></div>
+                        <div class="stat-card"><div class="stat-icon" style="--accent:#d4a04a"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="stat-info"><span class="stat-value" id="statTotalMembers">0</span><span class="stat-label">活跃成员</span></div></div>
+                        <div class="stat-card"><div class="stat-icon" style="--accent:#5ea87a"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="stat-info"><span class="stat-value" id="statAvgPerDay">0</span><span class="stat-label">日均消息</span></div></div>
+                        <div class="stat-card"><div class="stat-icon" style="--accent:#5a9eaf"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="stat-info"><span class="stat-value" id="statTimeRange">-</span><span class="stat-label">时间范围</span></div></div>
+                    </div>
+                    <div class="charts-row"><div class="chart-card wide"><h3>24小时消息分布</h3><div class="chart-container"><canvas id="hourlyChart"></canvas></div></div><div class="chart-card"><h3>消息类型分布</h3><div class="chart-container"><canvas id="typeChart"></canvas></div></div></div>
+                    <div class="charts-row"><div class="chart-card"><h3>每日消息趋势</h3><div class="chart-container"><canvas id="dailyChart"></canvas></div></div><div class="chart-card"><h3>星期分布</h3><div class="chart-container"><canvas id="weekdayChart"></canvas></div></div></div>
+                    <div class="charts-row"><div class="chart-card"><h3>24小时活跃度雷达</h3><div class="chart-container"><canvas id="trendHourlyChart"></canvas></div></div><div class="chart-card"><h3>互动分析</h3><div class="interaction-list" id="interactionList"><p class="empty-hint">暂无互动数据</p></div></div></div>
+                    <div class="chart-card"><h3>活跃成员排名</h3><div class="chart-container" style="height:400px"><canvas id="memberChart"></canvas></div></div>
+                    <div class="chart-card"><h3>成员详情</h3><div class="table-container"><table id="memberTable"><thead><tr><th>排名</th><th>成员</th><th>消息数</th><th>文本</th><th>图片</th><th>其他</th><th>占比</th><th>平均字数</th></tr></thead><tbody></tbody></table></div></div>
+                    <div id="dashboardInsight" style="display:none">
+                        <div class="chart-card"><h3>💡 群聊洞察</h3><p id="dashInsightSummary" class="ai-summary-text"></p></div>
+                        <div class="charts-row"><div class="chart-card half"><h4>🏆 活跃用户称号</h4><div id="dashInsightTitles" class="user-titles-list"></div></div><div class="chart-card half"><h4>💬 金句集锦</h4><div id="dashInsightQuotes" class="golden-quotes-list"></div></div></div>
+                        <div class="chart-card"><h4>🔥 质量锐评</h4><div id="dashInsightQuality" class="chat-quality-section"></div></div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-ai">
+                    <div class="ai-section">
+                        <div class="apikey-banner" id="apikeyBanner" style="display:none">
+                            <div class="apikey-banner-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            </div>
+                            <div class="apikey-banner-text">
+                                <strong>API Key 未配置</strong>
+                                <span>AI 深度分析需要配置 API Key，当前将使用规则分析。点击右侧按钮前往设置。</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm" id="apikeyBannerBtn">前往设置</button>
+                        </div>
+                        <div class="ai-header">
+                            <h3>AI 智能分析</h3>
+                            <div class="ai-header-actions">
+                                <div class="analysis-mode-group">
+                                    <button class="btn btn-primary" id="btnAiAnalysis" data-mode="auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>开始分析</button>
+                                    <div class="analysis-mode-dropdown" id="analysisModeDropdown">
+                                        <button class="btn btn-primary btn-icon" id="btnAnalysisDropdown" title="选择分析方式">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </button>
+                                        <div class="dropdown-menu" id="analysisDropdownMenu">
+                                            <div class="dropdown-item active" data-mode="auto">
+                                                <span class="dropdown-item-icon">🤖</span>
+                                                <div class="dropdown-item-text">
+                                                    <strong>自动选择</strong>
+                                                    <small>API Key → Ollama → 规则分析</small>
+                                                </div>
+                                            </div>
+                                            <div class="dropdown-item" data-mode="ai">
+                                                <span class="dropdown-item-icon">🔑</span>
+                                                <div class="dropdown-item-text">
+                                                    <strong>API Key 分析</strong>
+                                                    <small>使用配置的 AI API 进行深度分析</small>
+                                                </div>
+                                            </div>
+                                            <div class="dropdown-item" data-mode="ide">
+                                                <span class="dropdown-item-icon">💻</span>
+                                                <div class="dropdown-item-text">
+                                                    <strong>IDE AI 分析</strong>
+                                                    <small>提交给 IDE AI 进行智能分析</small>
+                                                </div>
+                                            </div>
+                                            <div class="dropdown-item" data-mode="rules">
+                                                <span class="dropdown-item-icon">📊</span>
+                                                <div class="dropdown-item-text">
+                                                    <strong>规则分析</strong>
+                                                    <small>基于规则引擎的快速分析</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="range-picker" id="rangePicker">
+                            <div class="range-picker-label">📅 分析时间段</div>
+                            <div class="range-picker-fields">
+                                <div class="range-field">
+                                    <label>起始日期</label>
+                                    <input type="date" id="rangeStartDate">
+                                </div>
+                                <span class="range-sep">~</span>
+                                <div class="range-field">
+                                    <label>结束日期</label>
+                                    <input type="date" id="rangeEndDate">
+                                </div>
+                                <button class="btn btn-outline btn-sm" id="btnRangeClear">清除</button>
+                            </div>
+                            <div class="range-quick-btns">
+                                <button class="btn btn-outline btn-sm" data-range="1d">近1天</button>
+                                <button class="btn btn-outline btn-sm" data-range="3d">近3天</button>
+                                <button class="btn btn-outline btn-sm" data-range="7d">近7天</button>
+                                <button class="btn btn-outline btn-sm" data-range="30d">近30天</button>
+                                <button class="btn btn-outline btn-sm" data-range="all">全部</button>
+                            </div>
+                        </div>
+                        <div class="theme-section" id="themeSection">
+                            <div class="theme-section-label">🎨 报告风格</div>
+                            <div class="theme-picker" id="themePicker">
+                                <div class="theme-card active" data-theme="scrapbook" style="--tc-bg:#faf5ee;--tc-accent:#d4a853;">
+                                    <div class="theme-card-preview"><div class="theme-card-swatch" style="background:#8b5e3c;"></div><div class="theme-card-swatch" style="background:#d4a853;"></div><div class="theme-card-swatch" style="background:#e07850;"></div></div>
+                                    <div class="theme-card-info"><span class="theme-card-name">📒 手账风</span><span class="theme-card-desc">暖色手账风格</span></div>
+                                </div>
+                                <div class="theme-card" data-theme="classic" style="--tc-bg:#ffffff;--tc-accent:#6366f1;">
+                                    <div class="theme-card-preview"><div class="theme-card-swatch" style="background:#6366f1;"></div><div class="theme-card-swatch" style="background:#8b5cf6;"></div><div class="theme-card-swatch" style="background:#10b981;"></div></div>
+                                    <div class="theme-card-info"><span class="theme-card-name">🎨 经典</span><span class="theme-card-desc">简洁专业风格</span></div>
+                                </div>
+                                <div class="theme-card" data-theme="hack" style="--tc-bg:#0d1117;--tc-accent:#00ff41;">
+                                    <div class="theme-card-preview"><div class="theme-card-swatch" style="background:#00ff41;"></div><div class="theme-card-swatch" style="background:#0d1117;"></div><div class="theme-card-swatch" style="background:#f778ba;"></div></div>
+                                    <div class="theme-card-info"><span class="theme-card-name">⚡ 赛博朋克</span><span class="theme-card-desc">暗色终端风格</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ai-loading" id="aiLoading" style="display:none"><div class="spinner"></div><span>AI 正在分析中...</span></div>
+                        <div class="ai-results" id="aiResults" style="display:none">
+                            <div id="aiWarningsBanner" class="ai-warnings-banner" style="display:none">
+                                <div class="ai-warnings-icon">⚠️</div>
+                                <div class="ai-warnings-content">
+                                    <div class="ai-warnings-title">AI 分析部分失败</div>
+                                    <ul class="ai-warnings-list"></ul>
+                                </div>
+                            </div>
+                            <div class="ai-card" id="htmlPreviewCard" style="display:none">
+                                <h4>📄 报告预览 <div style="float:right;display:flex;gap:6px"><button class="btn btn-primary btn-sm" id="btnGenerateImage" style="display:none">🖼️ 生成图片</button><a id="htmlPreviewLink" href="#" target="_blank" class="btn btn-outline btn-sm">新窗口打开</a></div></h4>
+                                <div class="html-preview-container">
+                                    <iframe id="htmlPreviewFrame" class="html-preview-iframe" sandbox="allow-same-origin"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ai-empty" id="aiEmpty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><p>选择群聊后点击"开始分析"，AI 将为你生成群聊摘要、用户称号、金句识别和质量锐评</p></div>
+                        <div class="ide-task-status" id="ideTaskStatus" style="display:none">
+                            <div class="ide-task-waiting">
+                                <div class="spinner"></div>
+                                <div>
+                                    <p class="ide-task-title">⏳ 正在使用最佳可用模型分析...</p>
+                                    <p class="ide-task-hint">自动选择：API Key → Ollama → 规则分析，完成后自动展示报告</p>
+                                    <p class="ide-task-hint">连接 IDE 后，IDE AI 可自动增强分析效果</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 报告异步生成进度模态框 -->
+                        <div class="report-progress-modal" id="reportProgressModal" style="display:none">
+                            <div class="report-progress-card">
+                                <div class="rpm-header">
+                                    <div class="rpm-title">⏳ 正在生成报告</div>
+                                    <div class="rpm-sub" id="rpmGroupName"></div>
+                                </div>
+                                <div class="rpm-bar-wrap">
+                                    <div class="rpm-bar" id="rpmBar"></div>
+                                    <div class="rpm-bar-text" id="rpmBarText">0%</div>
+                                </div>
+                                <ul class="rpm-stages" id="rpmStages">
+                                    <li data-stage="loading"><span class="rpm-dot">○</span>加载消息</li>
+                                    <li data-stage="stats"><span class="rpm-dot">○</span>统计分析</li>
+                                    <li data-stage="ai"><span class="rpm-dot">○</span>AI 分析</li>
+                                    <li data-stage="render"><span class="rpm-dot">○</span>渲染 HTML</li>
+                                    <li data-stage="render_done" style="display:none"><span class="rpm-dot">○</span>HTML 已就绪</li>
+                                    <li data-stage="screenshot"><span class="rpm-dot">○</span>截图</li>
+                                </ul>
+                                <div class="rpm-msg" id="rpmMsg">任务已入队...</div>
+                                <div class="rpm-actions">
+                                    <button class="btn btn-outline btn-sm" id="rpmMinBtn">最小化</button>
+                                    <button class="btn btn-outline btn-sm" id="rpmCancelBtn" style="display:none">取消订阅</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-datasource">
+                    <div class="ds-section">
+                        <div class="chart-card">
+                            <h3>chatlog 数据源 <span class="badge" id="chatlogBadge">检测中</span></h3>
+                            <p class="ds-desc">从 chatlog 解密数据库直接读取聊天记录，支持完整历史消息分析，无需微信在线。</p>
+                            <div class="ds-content">
+                                <div class="ds-status-bar" id="chatlogStatusBar"><span class="status-dot inactive"></span><span>正在检测 chatlog 数据库...</span></div>
+                                <div class="ds-actions" id="chatlogActions" style="display:none">
+                                    <div class="form-group"><label>选择聊天对象（talker）</label><select id="chatlogTalkerSelect"><option value="">加载中...</option></select></div>
+                                    <div class="form-group"><label>消息数量限制（0=全部）</label><input type="number" id="chatlogLimit" value="0" min="0" /></div>
+                                    <button class="btn btn-primary btn-lg" id="btnChatlogLoad"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>从 chatlog 加载数据</button>
+                                    <button class="btn btn-outline btn-sm" id="btnChatlogRefresh" style="margin-top:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>刷新微信数据（重新解密）</button>
+                                </div>
+                                <div class="chatlog-install-guide" id="chatlogInstallGuide" style="display:none">
+                                    <div class="install-guide-title">chatlog 未安装或未配置</div>
+                                    <div class="install-steps">
+                                        <div class="install-step">
+                                            <div class="install-step-num">①</div>
+                                            <div class="install-step-body">
+                                                <div class="install-step-title">下载 chatlog_alpha</div>
+                                                <div class="install-step-desc">前往 <a href="https://github.com/blueboo0/chatlog_alpha" target="_blank" rel="noopener">GitHub 仓库</a> 下载最新版本，或使用命令安装：</div>
+                                                <code class="install-code">pip install chatlog_alpha</code>
+                                            </div>
+                                        </div>
+                                        <div class="install-step">
+                                            <div class="install-step-num">②</div>
+                                            <div class="install-step-body">
+                                                <div class="install-step-title">配置 chatlog</div>
+                                                <div class="install-step-desc">运行 chatlog 解密微信数据库，确保微信 PC 端已登录：</div>
+                                                <code class="install-code">chatlog alpha</code>
+                                            </div>
+                                        </div>
+                                        <div class="install-step">
+                                            <div class="install-step-num">③</div>
+                                            <div class="install-step-body">
+                                                <div class="install-step-title">重新检测</div>
+                                                <div class="install-step-desc">配置完成后，点击下方按钮重新检测数据源连接：</div>
+                                                <button class="btn btn-primary btn-sm" id="btnRetryDetect" style="margin-top:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>重新检测</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-card"><h3>已加载数据</h3><div class="data-files" id="dataFiles"><p class="empty-hint">暂无已加载数据</p></div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-outline btn-sm" id="btnDeleteAllData" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除全部数据</button><button class="btn btn-outline btn-sm" id="btnExportCSV" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>导出 CSV</button></div></div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-reports">
+                    <div class="chart-card">
+                        <h3>报告历史</h3>
+                        <p class="ds-desc">查看和管理已生成的报告文件</p>
+                        <div id="reportHistoryList"><p class="empty-hint">暂无报告记录</p></div>
+                    </div>
+                </div>
+
+                <div class="page" id="page-compare">
+                    <div class="compare-section">
+                        <h2 style="margin-bottom:16px">多群对比分析</h2>
+                        <div class="compare-select" style="margin-bottom:20px">
+                            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">选择 2-6 个群聊进行对比分析</p>
+                            <div id="compareGroupList" class="compare-group-list"></div>
+                            <button class="btn btn-primary" id="btnCompare" style="margin-top:12px" disabled>开始对比</button>
+                        </div>
+                        <div id="compareResult" style="display:none">
+                            <div class="compare-overview" id="compareOverview"></div>
+                            <div class="compare-charts" id="compareCharts"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="page" id="page-settings">
+                    <div class="chart-card">
+                        <h3>⚙️ AI 模型配置</h3>
+                        <p class="ds-desc">配置 AI 分析使用的模型和 API Key。配置保存后立即生效，无需重启。</p>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <label>AI 服务商</label>
+                                <select id="cfgProvider">
+                                    <option value="deepseek">DeepSeek</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="ollama">Ollama (本地)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>API Key</label>
+                                <input type="password" id="cfgApiKey" placeholder="sk-..." />
+                                <div class="form-hint" id="cfgApiKeyHint">未配置 API Key，将使用规则分析</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Base URL</label>
+                                <input type="text" id="cfgBaseUrl" placeholder="https://api.deepseek.com/v1" />
+                            </div>
+                            <div class="form-group">
+                                <label>模型名称</label>
+                                <input type="text" id="cfgModel" placeholder="deepseek-chat" />
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group half">
+                                    <label>Temperature</label>
+                                    <input type="number" id="cfgTemp" step="0.1" min="0" max="2" value="0.7" />
+                                </div>
+                                <div class="form-group half">
+                                    <label>Max Tokens</label>
+                                    <input type="number" id="cfgMaxTokens" step="256" min="256" max="16384" value="4096" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group half">
+                                    <label>AI 并发数 <span class="form-tag">P2</span></label>
+                                    <select id="cfgConcurrentWorkers">
+                                        <option value="1">1（串行，最稳）</option>
+                                        <option value="2">2（低并发）</option>
+                                        <option value="3">3（中等）</option>
+                                        <option value="4">4（较高）</option>
+                                        <option value="5" selected>5（默认，全并发）</option>
+                                    </select>
+                                    <div class="form-hint">reasoning/限流敏感模型建议选 1-2</div>
+                                </div>
+                                <div class="form-group half">
+                                    <label>关闭思考 <span class="form-tag">NVIDIA</span></label>
+                                    <label class="switch-row">
+                                        <input type="checkbox" id="cfgEnableThinking" />
+                                        <span class="switch-slider"></span>
+                                        <span class="switch-label">启用模型 CoT 思考</span>
+                                    </label>
+                                    <div class="form-hint">关闭可提速 2-5x；reasoning 模型（Step3/Qwen3）建议关</div>
+                                </div>
+                            </div>
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" id="btnSaveConfig">💾 保存配置</button>
+                                <button class="btn btn-outline" id="btnTestConfig">🧪 测试连接</button>
+                            </div>
+                            <div class="settings-status" id="settingsStatus" style="display:none"></div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>🔗 MCP 连接状态</h3>
+                        <p class="ds-desc">MCP 服务器允许 IDE（Trae/Claude Code/Cursor）直接调用群聊分析功能。</p>
+                        <div class="settings-form">
+                            <div class="ds-status-bar" id="mcpStatusBar" style="margin-bottom:12px">
+                                <span class="status-dot inactive"></span>
+                                <span>检测中...</span>
+                            </div>
+                            <div class="form-group">
+                                <label>MCP 服务器启动命令</label>
+                                <code class="install-code" style="display:block;margin-top:4px">python -m chatlens.mcp_server</code>
+                            </div>
+                            <div class="form-group">
+                                <label>IDE 配置示例（Trae/Cursor）</label>
+                                <pre style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:12px;line-height:1.6;overflow-x:auto;margin-top:4px;font-family:var(--font-mono)">{
+  "mcpServers": {
+    "群聊分析": {
+      "command": "python",
+      "args": ["-m", "chatlens.mcp_server"],
+      "cwd": "项目目录路径"
+    }
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>⏰ 定时任务</h3>
+                        <p class="ds-desc">设置定时解密并自动分析指定群聊，每天在设定时间自动执行：解密数据库 → 加载最新消息 → 生成分析报告。</p>
+                        <div class="settings-form">
+                            <div class="form-row">
+                                <div class="form-group" style="flex:2">
+                                    <label>选择群聊</label>
+                                    <select id="schedGroupSelect"><option value="">选择群聊</option></select>
+                                </div>
+                                <div class="form-group" style="flex:1">
+                                    <label>时</label>
+                                    <input type="number" id="schedHour" min="0" max="23" value="9" />
+                                </div>
+                                <div class="form-group" style="flex:1">
+                                    <label>分</label>
+                                    <input type="number" id="schedMinute" min="0" max="59" value="0" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group half">
+                                    <label>报告风格</label>
+                                    <select id="schedTheme">
+                                        <option value="scrapbook">📒 手账风</option>
+                                        <option value="classic">🎨 经典</option>
+                                        <option value="hack">⚡ 黑客风</option>
+                                    </select>
+                                </div>
+                                <div class="form-group half">
+                                    <label>&nbsp;</label>
+                                    <button class="btn btn-primary" id="btnCreateSchedule" style="width:100%">➕ 创建定时任务</button>
+                                </div>
+                            </div>
+                            <div id="scheduleList" style="margin-top:16px"></div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>📋 关于</h3>
+                        <div class="about-info">
+                            <p><strong>微信群聊分析工具</strong> v1.0</p>
+                            <p>基于 chatlog_alpha 解密微信本地数据库，支持统计分析、AI 智能分析、多主题报告生成。</p>
+                            <p>技术栈：Python HTTP Server + PyMuPDF + Jinja2 + Chart.js + MCP</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div class="theme-preview-modal" id="themePreviewModal" style="display:none">
+        <div class="theme-preview-content">
+            <div class="theme-preview-header">
+                <span id="themePreviewName"></span>
+                <button class="btn btn-outline btn-sm" id="themePreviewClose">✕</button>
+            </div>
+            <div class="theme-preview-body" id="themePreviewBody">
+                <!-- 动态填充预览内容 -->
+            </div>
+            <div class="theme-preview-footer">
+                <button class="btn btn-primary btn-sm" id="themePreviewApply">使用此风格</button>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container" id="toastContainer"></div>
+    <script defer src="app.js?v=2.0"></script>
+</body>
+</html>

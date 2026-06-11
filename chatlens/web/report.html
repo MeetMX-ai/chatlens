@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群聊分析报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+KuaiLe&family=JetBrains+Mono:wght@400&display=swap" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=ZCOOL+KuaiLe&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #faf8f5;
+            --card-bg: #ffffff;
+            --text-primary: #2d2a26;
+            --text-secondary: #6b6560;
+            --text-muted: #9e9689;
+            --accent-warm: #e07850;
+            --accent-gold: #d4a853;
+            --accent-coral: #f08070;
+            --accent-teal: #4a9b8c;
+            --accent-purple: #8b6bb3;
+            --accent-blue: #5b8cd0;
+            --border: #ebe6de;
+            --shadow-sm: 0 1px 3px rgba(45,42,38,0.06);
+            --shadow-md: 0 4px 16px rgba(45,42,38,0.08);
+            --radius: 16px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.7;
+            padding: 20px;
+        }
+        .report-container {
+            max-width: 720px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            position: relative;
+        }
+        .report-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 6px;
+            background: linear-gradient(90deg, var(--accent-warm), var(--accent-gold), var(--accent-coral), var(--accent-teal), var(--accent-purple));
+        }
+
+        /* Header */
+        .r-header {
+            text-align: center;
+            padding: 48px 40px 32px;
+            background: linear-gradient(180deg, #fff9f3 0%, #ffffff 100%);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+        .r-header::after {
+            content: '✦';
+            position: absolute;
+            bottom: -12px; left: 50%; transform: translateX(-50%);
+            width: 24px; height: 24px;
+            background: var(--card-bg);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent-gold); font-size: 14px;
+            box-shadow: 0 0 0 4px var(--card-bg), 0 0 0 5px var(--border);
+        }
+        .r-emoji-big { font-size: 48px; margin-bottom: 12px; }
+        .r-title {
+            font-size: 28px; font-weight: 900;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent-warm), var(--accent-gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .r-subtitle {
+            font-size: 14px; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Stats Grid */
+        .r-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 32px 28px 24px;
+        }
+        .r-stat-card {
+            text-align: center;
+            padding: 16px 10px;
+            background: linear-gradient(145deg, #fefcf9, #f8f4ef);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+        .r-stat-icon { font-size: 24px; margin-bottom: 6px; }
+        .r-stat-value {
+            font-size: 26px; font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-warm);
+        }
+        .r-stat-label {
+            font-size: 11px; color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Section */
+        .r-section {
+            padding: 24px 28px;
+            border-top: 1px dashed var(--border);
+        }
+        .r-section-header {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 16px;
+        }
+        .r-section-emoji { font-size: 20px; }
+        .r-section-title {
+            font-size: 17px; font-weight: 700;
+            color: var(--text-primary);
+        }
+        .r-section-badge {
+            margin-left: auto;
+            font-size: 10px; padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(224,120,80,0.08);
+            color: var(--accent-warm);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Chart */
+        .r-chart-wrap { height: 200px; position: relative; }
+
+        /* Member List */
+        .r-member-list { display: flex; flex-direction: column; gap: 8px; }
+        .r-member-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px;
+            background: #fafaf8;
+            border-radius: 12px;
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+        }
+        .r-member-row:hover { background: #f5f3f0; border-left-color: var(--accent-warm); }
+        .r-member-rank {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0;
+        }
+        .r-member-rank.gold { background: linear-gradient(135deg,#ffd700,#ffb300); color: #fff; }
+        .r-member-rank.silver { background: linear-gradient(135deg,#c0c0c0,#a0a0a0); color: #fff; }
+        .r-member-rank.bronze { background: linear-gradient(135deg,#cd7f32,#a66620); color: #fff; }
+        .r-member-rank.normal { background: var(--border); color: var(--text-muted); }
+        .r-member-name { font-weight: 600; font-size: 13px; min-width: 90px; }
+        .r-member-bar-wrap { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .r-member-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent-warm), var(--accent-gold)); transition: width 0.5s ease; }
+        .r-member-count { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; min-width: 48px; text-align: right; }
+
+        /* AI Summary */
+        .r-summary-box {
+            padding: 18px 20px;
+            background: linear-gradient(135deg, #fffbf5, #fff8f0);
+            border-radius: var(--radius);
+            border: 1px solid rgba(224,120,80,0.15);
+            font-size: 14px; line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        /* User Titles */
+        .r-title-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .r-title-card {
+            padding: 14px 16px;
+            background: #fafaf8;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        .r-title-card::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent-warm), var(--accent-gold));
+        }
+        .r-title-name { font-weight: 700; font-size: 13px; }
+        .r-title-badge {
+            display: inline-block;
+            font-size: 14px; font-weight: 900;
+            color: var(--accent-warm);
+            font-family: 'ZCOOL KuaiLe', cursive;
+            margin: 4px 0 6px;
+        }
+        .r-title-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+        .r-title-tag {
+            font-size: 10px; padding: 1px 7px; border-radius: 8px;
+            font-weight: 600; letter-spacing: 0.3px;
+        }
+        .r-title-reason { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+        /* Golden Quotes */
+        .r-quote-list { display: flex; flex-direction: column; gap: 14px; }
+        .r-quote-card {
+            padding: 18px 20px;
+            background: linear-gradient(135deg, #fffbeb, #fff8e8);
+            border-radius: var(--radius);
+            border-left: 4px solid var(--accent-gold);
+            position: relative;
+        }
+        .r-quote-card::after {
+            content: '"';
+            position: absolute;
+            top: 8px; right: 16px;
+            font-size: 48px; color: rgba(212,168,83,0.15);
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        .r-quote-text {
+            font-size: 15px; font-style: italic;
+            line-height: 1.7; color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+        .r-quote-meta {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 12px; color: var(--text-muted);
+        }
+        .r-quote-sender { font-weight: 600; color: var(--accent-warm); }
+
+        /* Chat Quality */
+        .r-quality-dims { display: flex; flex-direction: column; gap: 14px; }
+        .r-qdim { }
+        .r-qdim-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 6px;
+        }
+        .r-qdim-name { font-weight: 700; font-size: 14px; }
+        .r-qdim-pct { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; }
+        .r-qdim-bar { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+        .r-qdim-fill { height: 100%; border-radius: 5px; transition: width 0.8s ease; }
+        .r-qdim-comment { font-size: 12px; color: var(--text-secondary); margin-top: 5px; line-height: 1.5; }
+        .r-quality-summary {
+            margin-top: 16px; padding: 16px 20px;
+            background: linear-gradient(135deg, #f0f8ff, #e8f4f8);
+            border-radius: var(--radius);
+            text-align: center;
+            font-size: 15px; font-weight: 600;
+            color: var(--accent-blue);
+            font-style: italic;
+        }
+
+        /* Keywords */
+        .r-keyword-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+        .r-kw {
+            padding: 5px 14px; border-radius: 20px;
+            font-size: 13px; font-weight: 500;
+            background: rgba(224,120,80,0.06);
+            color: var(--accent-warm);
+            border: 1px solid rgba(224,120,80,0.12);
+        }
+
+        /* Topics */
+        .r-topic-item {
+            padding: 12px 16px;
+            background: #fafaf8;
+            border-radius: 12px;
+            border-left: 3px solid var(--accent-teal);
+            margin-bottom: 8px;
+        }
+        .r-topic-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+        .r-topic-desc { font-size: 12px; color: var(--text-secondary); }
+
+        /* Footer */
+        .r-footer {
+            text-align: center;
+            padding: 32px 28px;
+            background: linear-gradient(180deg, #ffffff, #f8f5f0);
+            border-top: 1px solid var(--border);
+        }
+        .r-footer-brand {
+            font-size: 13px; font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .r-footer-info {
+            font-size: 11px; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .r-footer-tags {
+            display: flex; justify-content: center; gap: 12px;
+            margin-top: 12px; flex-wrap: wrap;
+        }
+        .r-ftag {
+            font-size: 10px; padding: 3px 10px;
+            border-radius: 12px;
+            background: var(--border);
+            color: var(--text-muted);
+        }
+
+        /* Print / Export */
+        @media print {
+            body { padding: 0; background: white; }
+            .report-container { box-shadow: none; border-radius: 0; }
+        }
+
+        /* Empty state */
+        .r-empty {
+            text-align: center; padding: 48px 28px;
+            color: var(--text-muted);
+        }
+        .r-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+<div class="report-container" id="report">
+
+<!-- Header -->
+<div class="r-header">
+    <div class="r-emoji-big" id="rEmoji">📊</div>
+    <div class="r-title" id="rTitle">群聊分析报告</div>
+    <div class="r-subtitle" id="rDate"></div>
+</div>
+
+<!-- Stats -->
+<div class="r-stats" id="rStats"></div>
+
+<!-- 24h Chart -->
+<div class="r-section">
+    <div class="r-section-header">
+        <span class="r-section-emoji">📈</span>
+        <span class="r-section-title">24小时活跃度</span>
+        <span class="r-section-badge">HOURLY</span>
+    </div>
+    <div class="r-chart-wrap"><canvas id="rHourlyChart"></canvas></div>
+</div>
+
+<!-- Daily Trend -->
+<div class="r-section">
+    <div class="r-section-header">
+        <span class="r-section-emoji">📅</span>
+        <span class="r-section-title">每日消息趋势</span>
+        <span class="r-section-badge">DAILY</span>
+    </div>
+    <div class="r-chart-wrap"><canvas id="rDailyChart"></canvas></div>
+</div>
+
+<!-- Members TOP -->
+<div class="r-section">
+    <div class="r-section-header">
+        <span class="r-section-emoji">🏆</span>
+        <span class="r-section-title">活跃成员排行</span>
+        <span class="r-section-badge">TOP MEMBERS</span>
+    </div>
+    <div class="r-member-list" id="rMembers"></div>
+</div>
+
+<!-- AI Summary -->
+<div class="r-section" id="rSummarySection" style="display:none">
+    <div class="r-section-header">
+        <span class="r-section-emoji">💡</span>
+        <span class="r-section-title">群聊摘要</span>
+        <span class="r-section-badge">AI SUMMARY</span>
+    </div>
+    <div class="r-summary-box" id="rSummary"></div>
+</div>
+
+<!-- Topics -->
+<div class="r-section" id="rTopicsSection" style="display:none">
+    <div class="r-section-header">
+        <span class="r-section-emoji">🗣️</span>
+        <span class="r-section-title">讨论话题</span>
+        <span class="r-section-badge">TOPICS</span>
+    </div>
+    <div id="rTopics"></div>
+</div>
+
+<!-- Keywords -->
+<div class="r-section" id="rKeywordsSection" style="display:none">
+    <div class="r-section-header">
+        <span class="r-section-emoji">🔑</span>
+        <span class="r-section-title">关键词云</span>
+        <span class="r-section-badge">KEYWORDS</span>
+    </div>
+    <div class="r-keyword-cloud" id="rKeywords"></div>
+</div>
+
+<!-- User Titles -->
+<div class="r-section" id="rTitlesSection" style="display:none">
+    <div class="r-section-header">
+        <span class="r-section-emoji">🎭</span>
+        <span class="r-section-title">用户称号与人格画像</span>
+        <span class="r-section-badge">PERSONA</span>
+    </div>
+    <div class="r-title-grid" id="rUserTitles"></div>
+</div>
+
+<!-- Golden Quotes -->
+<div class="r-section" id="rQuotesSection" style="display:none">
+    <div class="r-section-header">
+        <span class="r-section-emoji">💬</span>
+        <span class="r-section-title">金句集锦</span>
+        <span class="r-section-badge">QUOTES</span>
+    </div>
+    <div class="r-quote-list" id="rGoldenQuotes"></div>
+</div>
+
+<!-- Chat Quality -->
+<div class="r-section" id="rQualitySection" style="display:none">
+    <div class="r-section-header">
+        <span class="r-section-emoji">🔥</span>
+        <span class="r-section-title">聊天质量锐评</span>
+        <span class="r-section-badge">QUALITY</span>
+    </div>
+    <div id="rChatQuality"></div>
+</div>
+
+<!-- Footer -->
+<div class="r-footer">
+    <div class="r-footer-brand">✨ 群聊分析 · 由 AI 驱动</div>
+    <div class="r-footer-info" id="rFooterInfo"></div>
+    <div class="r-footer-tags">
+        <span class="r-ftag">#微信群聊分析</span>
+        <span class="r-ftag">#AI驱动</span>
+        <span class="r-ftag">#chatlog</span>
+        <span class="r-ftag">#数据可视化</span>
+    </div>
+</div>
+
+</div>
+
+<script>
+const REPORT_DATA = __REPORT_DATA__;
+
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function renderReport() {
+    const d = REPORT_DATA;
+    if (!d) return;
+
+    const ov = d.overview || {};
+    const tr = ov.time_range || {};
+
+    document.getElementById('rTitle').textContent = d.group_name || '群聊分析报告';
+    document.getElementById('rDate').textContent =
+        (tr.start ? tr.start.slice(0,10) : '') + (tr.start && tr.end ? ' ~ ' : '') + (tr.end ? tr.end.slice(0,10) : '');
+
+    // Stats
+    const statsHtml = [
+        { icon:'💬', value: ov.total_messages || 0, label:'消息总数' },
+        { icon:'👥', value: ov.total_members || 0, label:'活跃成员' },
+        { icon:'📊', value: ov.avg_messages_per_day || 0, label:'日均消息' },
+        { icon:'📅', value: tr.start ? tr.start.slice(5,10)+'~'+tr.end.slice(5,10) : '-', label:'时间范围' },
+    ].map(s => `
+        <div class="r-stat-card">
+            <div class="r-stat-icon">${s.icon}</div>
+            <div class="r-stat-value">${typeof s.value === 'number' ? s.value.toLocaleString() : s.value}</div>
+            <div class="r-stat-label">${s.label}</div>
+        </div>`).join('');
+    document.getElementById('rStats').innerHTML = statsHtml;
+
+    // Hourly chart
+    const hourly = d.hourly_distribution || [];
+    new Chart(document.getElementById('rHourlyChart'), {
+        type:'bar',
+        data:{
+            labels: hourly.map(h=>h.label),
+            datasets:[{
+                data: hourly.map(h=>h.count),
+                backgroundColor: hourly.map((h,i)=>{
+                    const v = h.count;
+                    const max = Math.max(...hourly.map(x=>x.count))||1;
+                    const ratio = v/max;
+                    if(ratio > 0.7) return '#e07850';
+                    if(ratio > 0.4) return '#d4a853';
+                    if(ratio > 0.2) return '#4a9b8c';
+                    return '#c8c4bc';
+                }),
+                borderRadius: 4,
+                barThickness: 10,
+            }]
+        },
+        options:{ responsive:true,maintainAspectRatio:false,
+            plugins:{ legend:{display:false} },
+            scales:{ x:{ grid:{display:false}, ticks:{color:'#9e9689',font:{size:10}} },
+                y:{ grid:{color:'#ebe6de'}, ticks:{color:'#9e9689',font:{size:10}}} },
+        }
+    });
+
+    // Daily chart
+    const daily = d.daily_trend || [];
+    new Chart(document.getElementById('rDailyChart'), {
+        type:'line',
+        data:{
+            labels: daily.map(d=>d.date.slice(5)),
+            datasets:[{
+                data: daily.map(d=>d.count),
+                borderColor:'#e07850',
+                backgroundColor:'rgba(224,120,80,0.08)',
+                fill:true,
+                tension:0.4,
+                pointRadius: 4,
+                pointBackgroundColor:'#e07850',
+                pointBorderColor:'#fff',
+                pointBorderWidth: 2,
+            }]
+        },
+        options:{ responsive:true,maintainAspectRatio:false,
+            plugins:{ legend:{display:false} },
+            scales:{ x:{ grid:{display:false}, ticks:{color:'#9e9689',font:{size:10}} },
+                y:{ grid:{color:'#ebe6de'}, ticks:{color:'#9e9689',font:{size:10}}} },
+        }
+    });
+
+    // Members
+    const members = (d.member_stats || []).slice(0, 12);
+    const maxMsg = members.length ? members[0].msg_count : 1;
+    document.getElementById('rMembers').innerHTML = members.map((m, i) => {
+        const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
+        const pct = m.msg_count / maxMsg * 100;
+        return `<div class="r-member-row">
+            <div class="r-member-rank ${rankClass}">${i+1}</div>
+            <div class="r-member-name">${esc(m.sender)}</div>
+            <div class="r-member-bar-wrap"><div class="r-member-bar" style="width:${pct}%"></div></div>
+            <div class="r-member-count">${m.msg_count}条 ${m.msg_percentage}%</div>
+        </div>`;
+    }).join('');
+
+    // AI Summary
+    const ai = d.ai_data || {};
+    if (ai.summary && ai.summary.summary) {
+        document.getElementById('rSummarySection').style.display = 'block';
+        document.getElementById('rSummary').textContent = ai.summary.summary;
+    }
+    if (ai.summary && ai.summary.topics && ai.summary.topics.length) {
+        document.getElementById('rTopicsSection').style.display = 'block';
+        document.getElementById('rTopics').innerHTML = ai.summary.topics.map(t =>
+            `<div class="r-topic-item"><div class="r-topic-name">${esc(t.name)}</div><div class="r-topic-desc">${esc(t.description||'')}</div></div>`
+        ).join('');
+    }
+    if (ai.keywords && ai.keywords.keywords && ai.keywords.keywords.length) {
+        document.getElementById('rKeywordsSection').style.display = 'block';
+        document.getElementById('rKeywords').innerHTML = ai.keywords.keywords.map(k =>
+            `<span class="r-kw">${esc(k.word)} (${esc(k.relevance)})</span>`
+        ).join('');
+    }
+
+    // User Titles
+    if (ai.user_titles && ai.user_titles.user_titles && ai.user_titles.user_titles.length) {
+        document.getElementById('rTitlesSection').style.display = 'block';
+        const mbtiColors = {'INTJ':'#8b5cf6','INTP':'#6366f1','ENTJ':'#ef4444','ENTP':'#f59e0b','INFJ':'#10b981','INFP':'#06b6d4','ENFJ':'#ec4899','ENFP':'#f472b6','ISTJ':'#64748b','ISFJ':'#14b8a6','ESTJ':'#eab308','ESFJ':'#fb923c','ISTP':'#78716c','ISFP':'#a78bfa','ESTP':'#f87171','ESFP':'#34d399'};
+        document.getElementById('rUserTitles').innerHTML = ai.user_titles.user_titles.map(t => {
+            const mbtiColor = mbtiColors[t.mbti] || '#9e9689';
+            let tags = `<span class="r-title-tag" style="background:${mbtiColor}15;color:${mbtiColor};border:1px solid ${mbtiColor}30;">${esc(t.mbti||'???')}</span>`;
+            if (t.sbti) tags += `<span class="r-title-tag" style="background:${mbtiColor}10;color:${mbtiColor}aa;border:1px solid ${mbtiColor}20;">${esc(t.sbti)}</span>`;
+            if (t.acgti) tags += `<span class="r-title-tag" style="background:rgba(236,72,153,0.06);color:#ec489999;border:1px solid rgba(236,72,153,0.15);">${esc(t.acgti)}</span>`;
+            return `<div class="r-title-card">
+                <div class="r-title-name">${esc(t.name)}</div>
+                <div class="r-title-badge">「${esc(t.title||'?')}」</div>
+                <div class="r-title-tags">${tags}</div>
+                <div class="r-title-reason">${esc(t.reason||'')}</div>
+            </div>`;
+        }).join('');
+    }
+
+    // Golden Quotes
+    if (ai.golden_quotes && ai.golden_quotes.golden_quotes && ai.golden_quotes.golden_quotes.length) {
+        document.getElementById('rQuotesSection').style.display = 'block';
+        document.getElementById('rGoldenQuotes').innerHTML = ai.golden_quotes.golden_quotes.map(q =>
+            `<div class="r-quote-card">
+                <div class="r-quote-text">"${esc(q.content)}"</div>
+                <div class="r-quote-meta">
+                    <span class="r-quote-sender">— ${esc(q.sender)}</span>
+                    <span>${esc(q.reason||'')}</span>
+                </div>
+            </div>`
+        ).join('');
+    }
+
+    // Chat Quality
+    if (ai.chat_quality && ai.chat_quality.dimensions && ai.chat_quality.dimensions.length) {
+        document.getElementById('rQualitySection').style.display = 'block';
+        const cq = ai.chat_quality;
+        let html = '<div class="r-quality-dims">';
+        if (cq.title) html += `<div style="text-align:center;margin-bottom:16px;"><span style="font-size:20px;font-weight:900;background:linear-gradient(135deg,#e07850,#d4a853);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${esc(cq.title)}</span></div>`;
+        if (cq.subtitle) html += `<div style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:16px;">${esc(cq.subtitle)}</div>`;
+        cq.dimensions.forEach(dim => {
+            const color = dim.color || '#e07850';
+            html += `<div class="r-qdim">
+                <div class="r-qdim-header"><span class="r-qdim-name" style="color:${color}">${esc(dim.name)}</span><span class="r-qdim-pct" style="color:${color}">${dim.percentage}%</span></div>
+                <div class="r-qdim-bar"><div class="r-qdim-fill" style="width:${dim.percentage}%;background:linear-gradient(90deg,${color},${color}cc);"></div></div>
+                <div class="r-qdim-comment">${esc(dim.comment||'')}</div>
+            </div>`;
+        });
+        html += '</div>';
+        if (cq.summary) html += `<div class="r-quality-summary">"${esc(cq.summary)}"</div>`;
+        document.getElementById('rChatQuality').innerHTML = html;
+    }
+
+    // Keyword cloud from stats
+    if (!ai.keywords && d.keyword_cloud && d.keyword_cloud.length) {
+        document.getElementById('rKeywordsSection').style.display = 'block';
+        document.getElementById('rKeywords').innerHTML = d.keyword_cloud.map(k =>
+            `<span class="r-kw">${esc(k.word)} (${k.count})</span>`
+        ).join('');
+    }
+
+    // Footer
+    document.getElementById('rFooterInfo').textContent = `Generated at ${new Date().toLocaleString('zh-CN')}`;
+}
+
+renderReport();
+</script>
+</body>
+</html>

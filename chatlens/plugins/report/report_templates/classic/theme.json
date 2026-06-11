@@ -1,0 +1,8 @@
+{
+  "name": "classic",
+  "display_name": "经典简约",
+  "description": "简洁专业风格，适合正式场合分享",
+  "colors": ["#6366f1", "#8b5cf6", "#10b981", "#ffffff"],
+  "preview_bg": "#ffffff",
+  "preview_accent": "#6366f1"
+}

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{ group_name }} - 群聊报告</title>
+<style>
+/* ===== 基础重置 + 打印 ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+@media print{@page{size:800mm 5000mm;margin:0}}
+html{height:auto!important;overflow:visible!important}
+
+/* ===== 全局排版 ===== */
+body{
+  font-family:'Microsoft YaHei','SimSun','Songti SC',serif;
+  background:#faf8f5;
+  color:#2d2a26;
+  line-height:1.7;
+  padding:20px;
+  overflow:visible!important;
+  height:auto!important;
+}
+
+/* ===== 主容器（圆角白底卡 + 顶部 6px 多色渐变条 + 柔阴影） ===== */
+.rc{
+  max-width:720px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:24px;
+  box-shadow:0 4px 16px rgba(45,42,38,0.08);
+  overflow:hidden;
+  position:relative;
+}
+.rc::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:6px;
+  background:linear-gradient(90deg,#e07850,#d4a853,#f08070,#4a9b8c,#8b6bb3);
+  z-index:1;
+}
+
+/* ===== 头部 ===== */
+.hd{
+  text-align:center;
+  padding:48px 40px 32px;
+  background:linear-gradient(180deg,#fff9f3,#fff);
+  border-bottom:1px solid #ebe6de;
+  position:relative;
+}
+.hd::after{
+  content:'✦';
+  position:absolute;
+  bottom:-12px;
+  left:50%;
+  transform:translateX(-50%);
+  width:24px;height:24px;
+  background:#fff;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#d4a853;font-size:14px;
+  box-shadow:0 0 0 4px #fff,0 0 0 5px #ebe6de;
+}
+.hd h1{
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:-0.02em;
+  margin-bottom:8px;
+  background:linear-gradient(135deg,#e07850,#d4a853);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.hd .sub{
+  font-size:14px;
+  color:#9e9689;
+  font-family:'Consolas','Courier New',monospace;
+}
+
+/* ===== 4 列统计卡片 ===== */
+.sg{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  padding:32px 28px 24px;
+}
+.sc{
+  text-align:center;
+  padding:16px 10px;
+  background:linear-gradient(145deg,#fefcf9,#f8f4ef);
+  border-radius:16px;
+  border:1px solid #ebe6de;
+}
+.sc .si{font-size:24px;margin-bottom:6px}
+.sc .sv{
+  font-size:26px;
+  font-weight:900;
+  font-family:'Consolas','Courier New',monospace;
+  color:#e07850;
+}
+.sc .sl{font-size:11px;color:#9e9689;margin-top:2px}
+
+/* ===== section 通用（淡虚线分割） ===== */
+.sec{padding:24px 28px;border-top:1px dashed #ebe6de}
+.sec-h{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.sec-h .e{font-size:20px}
+.sec-h .t{font-size:17px;font-weight:700}
+.sec-h .b{
+  margin-left:auto;
+  font-size:10px;
+  padding:2px 8px;
+  border-radius:10px;
+  background:rgba(224,120,80,0.08);
+  color:#e07850;
+  font-family:'Consolas','Courier New',monospace;
+}
+
+/* ===== 摘要 ===== */
+.sb{
+  padding:18px 20px;
+  background:linear-gradient(135deg,#fffbf5,#fff8f0);
+  border-radius:16px;
+  border:1px solid rgba(224,120,80,0.15);
+  font-size:14px;line-height:1.8;color:#6b6560;
+}
+
+/* ===== 成员排行（金/银/铜圆 + monospace 排名 + SVG 进度条） ===== */
+.mr{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;
+  background:#fafaf8;
+  border-radius:12px;
+  border-left:3px solid transparent;
+  margin-bottom:8px;
+}
+.rk{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;
+  font-family:'Consolas','Courier New',monospace;
+  flex-shrink:0;
+}
+.rk.g{background:linear-gradient(135deg,#ffd700,#ffb300);color:#fff}
+.rk.s{background:linear-gradient(135deg,#c0c0c0,#a0a0a0);color:#fff}
+.rk.br{background:linear-gradient(135deg,#cd7f32,#a66620);color:#fff}
+.rk.n{background:#ebe6de;color:#9e9689}
+.mn{font-weight:600;font-size:13px;min-width:90px}
+.mc{
+  font-size:11px;color:#9e9689;
+  font-family:'Consolas','Courier New',monospace;
+  min-width:80px;text-align:right;
+}
+
+/* ===== 称号网格 ===== */
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tc{
+  padding:14px 16px;
+  background:#fafaf8;
+  border-radius:14px;
+  border:1px solid #ebe6de;
+  position:relative;overflow:hidden;
+}
+.tc::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#e07850,#d4a853);
+}
+.tc .tn{font-weight:700;font-size:13px}
+.tc .tt{
+  display:inline-block;
+  font-size:14px;font-weight:900;
+  color:#e07850;
+  font-family:'Microsoft YaHei','SimHei',sans-serif;
+  margin:4px 0 6px;
+}
+.tc .tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.tc .tag{
+  font-size:10px;padding:1px 7px;border-radius:8px;
+  font-weight:600;letter-spacing:0.3px;
+}
+.tc .tr{font-size:11px;color:#9e9689;line-height:1.5}
+
+/* ===== 金句卡片（淡金渐变 + 左侧金边 + 右侧大引号） ===== */
+.ql{display:flex;flex-direction:column;gap:14px}
+.qc{
+  padding:18px 20px;
+  background:linear-gradient(135deg,#fffbeb,#fff8e8);
+  border-radius:16px;
+  border-left:4px solid #d4a853;
+  position:relative;
+}
+.qc::after{
+  content:'\201C';
+  position:absolute;top:8px;right:16px;
+  font-size:48px;
+  color:rgba(212,168,83,0.15);
+  font-family:Georgia,serif;
+  line-height:1;
+}
+.qc .qt{
+  font-size:15px;font-style:italic;line-height:1.7;
+  color:#2d2a26;margin-bottom:10px;
+}
+.qc .qm{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:#9e9689;
+}
+.qc .qs{font-weight:600;color:#e07850}
+
+/* ===== 质量维度（每行不同颜色） ===== */
+.qd{margin-bottom:14px}
+.qd-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.qd-n{font-weight:700;font-size:14px}
+.qd-p{
+  font-family:'Consolas','Courier New',monospace;
+  font-weight:700;font-size:14px;
+}
+.qd-c{font-size:12px;color:#6b6560;margin-top:5px;line-height:1.5}
+.qs-box{
+  margin-top:16px;
+  padding:16px 20px;
+  background:linear-gradient(135deg,#f0f8ff,#e8f4f8);
+  border-radius:16px;
+  text-align:center;
+  font-size:15px;font-weight:600;
+  color:#5b8cd0;font-style:italic;
+}
+
+/* ===== 关键词胶囊 ===== */
+.kw{display:flex;flex-wrap:wrap;gap:8px}
+.kw span{
+  padding:5px 14px;
+  border-radius:20px;
+  font-size:13px;font-weight:500;
+  background:rgba(224,120,80,0.06);
+  color:#e07850;
+  border:1px solid rgba(224,120,80,0.12);
+}
+
+/* ===== 讨论话题 ===== */
+.tp{
+  padding:12px 16px;
+  background:#fafaf8;
+  border-radius:12px;
+  border-left:3px solid #4a9b8c;
+  margin-bottom:8px;
+}
+.tp .tpn{font-weight:700;font-size:14px;margin-bottom:4px}
+.tp .tpd{font-size:12px;color:#6b6560}
+
+/* ===== 图表容器 ===== */
+.chart-wrap{margin:8px 0;text-align:center}
+
+/* ===== 底部（渐变背景 + 标签） ===== */
+.ft{
+  text-align:center;
+  padding:32px 28px;
+  background:linear-gradient(180deg,#fff,#f8f5f0);
+  border-top:1px solid #ebe6de;
+}
+.ft .fb{font-size:13px;font-weight:700;color:#9e9689;margin-bottom:4px}
+.ft .fi{
+  font-size:11px;color:#9e9689;
+  font-family:'Consolas','Courier New',monospace;
+}
+.ft .ftags{display:flex;justify-content:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+.ft .ftag{
+  font-size:10px;padding:3px 10px;border-radius:12px;
+  background:#ebe6de;color:#9e9689;
+}
+</style>
+</head>
+<body>
+<div class="rc">
+
+<div class="hd">
+  <div style="font-size:48px;margin-bottom:12px">📊</div>
+  <h1>{{ group_name }}</h1>
+  <div class="sub">{{ time_start }} ~ {{ time_end }}</div>
+</div>
+
+<div class="sg">
+  <div class="sc"><div class="si">💬</div><div class="sv">{{ total_messages }}</div><div class="sl">消息总数</div></div>
+  <div class="sc"><div class="si">👥</div><div class="sv">{{ members|length }}</div><div class="sl">活跃成员</div></div>
+  <div class="sc"><div class="si">📊</div><div class="sv">{{ avg_daily }}</div><div class="sl">日均消息</div></div>
+  <div class="sc"><div class="si">📅</div><div class="sv" style="font-size:16px">{{ time_start }}~{{ time_end }}</div><div class="sl">时间范围</div></div>
+</div>
+
+{% if hourly_svg %}
+<div class="sec">
+  <div class="sec-h"><span class="e">📈</span><span class="t">24小时活跃度</span><span class="b">HOURLY</span></div>
+  <div class="chart-wrap">{{ hourly_svg|safe }}</div>
+</div>
+{% endif %}
+
+{% if daily_svg %}
+<div class="sec">
+  <div class="sec-h"><span class="e">📅</span><span class="t">每日消息趋势</span><span class="b">DAILY</span></div>
+  <div class="chart-wrap">{{ daily_svg|safe }}</div>
+</div>
+{% endif %}
+
+{% if members %}
+<div class="sec">
+  <div class="sec-h"><span class="e">🏆</span><span class="t">活跃成员排行</span><span class="b">TOP {{ members|length }}</span></div>
+  {% for m in members[:12] %}
+  <div class="mr">
+    <div class="rk {% if m.rank == 1 %}g{% elif m.rank == 2 %}s{% elif m.rank == 3 %}br{% else %}n{% endif %}">{{ m.rank }}</div>
+    <div class="mn">{{ m.name }}</div>
+    <div style="flex:1">{{ m.bar_svg|safe }}</div>
+    <div class="mc">{{ m.count }}条 {{ m.percentage }}%</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if msg_type_svg %}
+<div class="sec">
+  <div class="sec-h"><span class="e">📋</span><span class="t">消息类型分布</span><span class="b">TYPES</span></div>
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="chart-wrap" style="flex-shrink:0">{{ msg_type_svg|safe }}</div>
+    {% if msg_types %}
+    <div style="flex:1">
+      {% for mt in msg_types[:5] %}
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">
+        <span>{{ mt.label }}</span>
+        <span style="color:#9e9689;font-family:'Consolas','Courier New',monospace">{{ mt.count }} ({{ mt.percentage }}%)</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if ai_summary %}
+<div class="sec">
+  <div class="sec-h"><span class="e">💡</span><span class="t">群聊摘要</span><span class="b">AI</span></div>
+  <div class="sb">{{ ai_summary }}</div>
+</div>
+{% endif %}
+
+{% if ai_topics %}
+<div class="sec">
+  <div class="sec-h"><span class="e">🗣️</span><span class="t">讨论话题</span><span class="b">TOPICS</span></div>
+  {% for topic in ai_topics[:5] %}
+  <div class="tp">
+    <div class="tpn">{{ topic.name }}</div>
+    <div class="tpd">{{ topic.description }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if ai_keywords %}
+<div class="sec">
+  <div class="sec-h"><span class="e">🔑</span><span class="t">关键词云</span><span class="b">KEYWORDS</span></div>
+  <div class="kw">
+    {% for kw in ai_keywords[:20] %}
+    <span>{{ kw.word }}{% if kw.count is defined and kw.count %} ({{ kw.count }}){% elif kw.relevance is defined and kw.relevance %} ({{ kw.relevance }}){% endif %}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if ai_titles %}
+<div class="sec">
+  <div class="sec-h"><span class="e">🎭</span><span class="t">用户称号与人格画像</span><span class="b">PERSONA</span></div>
+  <div class="tg">
+    {% for t in ai_titles[:8] %}
+    <div class="tc">
+      <div class="tn">{{ t.name }}</div>
+      <div class="tt">「{{ t.title }}」</div>
+      <div class="tags">
+        <span class="tag" style="background:rgba(139,107,179,0.1);color:#8b6bb3;border:1px solid rgba(139,107,179,0.2)">{{ t.mbti }}</span>
+        <span class="tag" style="background:rgba(139,107,179,0.06);color:#8b6bb3cc;border:1px solid rgba(139,107,179,0.12)">{{ t.sbti }}</span>
+        {% if t.acgti %}
+        <span class="tag" style="background:rgba(236,72,153,0.06);color:#ec489999;border:1px solid rgba(236,72,153,0.15)">{{ t.acgti }}</span>
+        {% endif %}
+      </div>
+      <div class="tr">{{ t.reason }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if ai_quotes %}
+<div class="sec">
+  <div class="sec-h"><span class="e">💬</span><span class="t">金句集锦</span><span class="b">QUOTES</span></div>
+  <div class="ql">
+    {% for q in ai_quotes[:6] %}
+    <div class="qc">
+      <div class="qt">"{{ q.content }}"</div>
+      <div class="qm"><span class="qs">— {{ q.sender }}</span><span>{{ q.reason }}</span></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if ai_quality_title %}
+<div class="sec">
+  <div class="sec-h"><span class="e">🔥</span><span class="t">聊天质量锐评</span><span class="b">QUALITY</span></div>
+  <div style="text-align:center;margin-bottom:16px">
+    <span style="font-size:20px;font-weight:900;background:linear-gradient(135deg,#e07850,#d4a853);-webkit-background-clip:text;-webkit-text-fill-color:transparent">📊 {{ ai_quality_title }}</span>
+  </div>
+  {% if ai_quality_subtitle %}
+  <div style="text-align:center;font-size:13px;color:#9e9689;margin-bottom:16px">{{ ai_quality_subtitle }}</div>
+  {% endif %}
+  {% for d in ai_quality_dims %}
+  <div class="qd">
+    <div class="qd-h">
+      <span class="qd-n" style="color:{% if loop.index0 % 5 == 0 %}#e07850{% elif loop.index0 % 5 == 1 %}#d4a853{% elif loop.index0 % 5 == 2 %}#4a9b8c{% elif loop.index0 % 5 == 3 %}#8b6bb3{% else %}#5b8cd0{% endif %}">{{ d.name }}</span>
+      <span class="qd-p" style="color:{% if loop.index0 % 5 == 0 %}#e07850{% elif loop.index0 % 5 == 1 %}#d4a853{% elif loop.index0 % 5 == 2 %}#4a9b8c{% elif loop.index0 % 5 == 3 %}#8b6bb3{% else %}#5b8cd0{% endif %}">{{ d.percentage }}%</span>
+    </div>
+    <div>{{ d.bar_svg|safe }}</div>
+    <div class="qd-c">{{ d.comment }}</div>
+  </div>
+  {% endfor %}
+  {% if ai_quality_summary %}
+  <div class="qs-box">"{{ ai_quality_summary }}"</div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="ft">
+  <div class="fb">✨ 群聊分析 · 由 AI 驱动</div>
+  <div class="fi">Generated at {{ generated_at }}</div>
+  <div class="ftags">
+    <span class="ftag">#微信群聊分析</span>
+    <span class="ftag">#AI驱动</span>
+    <span class="ftag">#chatlog</span>
+    <span class="ftag">#数据可视化</span>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

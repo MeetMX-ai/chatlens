@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>{{ group_name }} - 群聊报告</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Courier New', 'Source Code Pro', monospace; background: #0d1117; color: #c9d1d9; width: 800px; margin: 0 auto; padding: 40px 32px; }
+  .header { padding: 24px 0 20px; border-bottom: 1px solid #00ff41; margin-bottom: 24px; }
+  .header::before { content: '> CHATLENS_REPORT_v2.0'; display: block; font-size: 11px; color: #00ff41; margin-bottom: 8px; opacity: 0.7; }
+  .header h1 { font-size: 24px; color: #00ff41; margin-bottom: 4px; text-shadow: 0 0 10px rgba(0,255,65,0.3); }
+  .header .subtitle { font-size: 12px; color: #484f58; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+  .stat-card { background: #161b22; border: 1px solid #21262d; border-radius: 6px; padding: 14px 10px; text-align: center; }
+  .stat-card .value { font-size: 22px; font-weight: 700; color: #00ff41; }
+  .stat-card .label { font-size: 11px; color: #484f58; margin-top: 4px; text-transform: uppercase; }
+  .section { background: #161b22; border: 1px solid #21262d; border-radius: 6px; padding: 18px; margin-bottom: 14px; }
+  .section-title { font-size: 14px; font-weight: 700; color: #00ff41; margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid #21262d; text-transform: uppercase; letter-spacing: 1px; }
+  .summary-text { font-size: 13px; line-height: 1.8; color: #8b949e; }
+  .member-row { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px solid #21262d; }
+  .member-row:last-child { border-bottom: none; }
+  .member-rank { width: 22px; height: 22px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #0d1117; margin-right: 8px; flex-shrink: 0; }
+  .rank-1 { background: #00ff41; } .rank-2 { background: #39d353; } .rank-3 { background: #26a641; } .rank-other { background: #238636; }
+  .member-name { width: 80px; font-size: 12px; font-weight: 600; color: #c9d1d9; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .member-bar { flex: 1; margin: 0 8px; }
+  .member-count { font-size: 11px; color: #484f58; flex-shrink: 0; }
+  .title-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .title-card { background: #0d1117; border-radius: 4px; padding: 10px; border-left: 2px solid #00ff41; }
+  .title-card .name { font-size: 12px; font-weight: 700; color: #c9d1d9; }
+  .title-card .badge { font-size: 11px; color: #00ff41; margin-left: 4px; }
+  .title-card .mbti { font-size: 10px; color: #484f58; margin-top: 2px; }
+  .title-card .reason { font-size: 11px; color: #8b949e; margin-top: 3px; line-height: 1.4; }
+  .quote-card { background: #0d1117; border-radius: 4px; padding: 10px; margin-bottom: 8px; border-left: 2px solid #f778ba; }
+  .quote-card .content { font-size: 13px; color: #c9d1d9; line-height: 1.5; }
+  .quote-card .meta { font-size: 11px; color: #484f58; margin-top: 4px; }
+  .quality-dim { display: flex; align-items: center; margin-bottom: 6px; }
+  .quality-dim .dim-name { width: 100px; font-size: 12px; color: #c9d1d9; flex-shrink: 0; }
+  .quality-dim .dim-bar { flex: 1; margin: 0 8px; }
+  .quality-dim .dim-pct { font-size: 11px; color: #484f58; width: 36px; text-align: right; flex-shrink: 0; }
+  .quality-dim .dim-comment { font-size: 11px; color: #8b949e; margin-left: 8px; flex: 1; }
+  .quality-title { font-size: 16px; font-weight: 700; color: #00ff41; text-align: center; margin-bottom: 4px; text-shadow: 0 0 8px rgba(0,255,65,0.2); }
+  .quality-subtitle { font-size: 12px; color: #484f58; text-align: center; margin-bottom: 12px; }
+  .quality-summary { font-size: 13px; color: #8b949e; text-align: center; margin-top: 8px; }
+  .keyword-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .keyword-tag { background: #0d1117; border: 1px solid #21262d; border-radius: 2px; padding: 2px 8px; font-size: 11px; color: #00ff41; }
+  .chart-area { text-align: center; margin: 8px 0; }
+  .chart-area svg { max-width: 100%; }
+  .footer { text-align: center; font-size: 11px; color: #21262d; margin-top: 14px; padding-top: 10px; border-top: 1px solid #21262d; }
+  .topic-item { margin-bottom: 4px; }
+  .topic-item .topic-name { font-size: 12px; font-weight: 600; color: #00ff41; }
+  .topic-item .topic-desc { font-size: 11px; color: #8b949e; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>{{ group_name }}</h1>
+  <div class="subtitle">{{ time_start }} ~ {{ time_end }} · {{ generated_at }}</div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card"><div class="value">{{ total_messages }}</div><div class="label">MSG_TOTAL</div></div>
+  <div class="stat-card"><div class="value">{{ total_members }}</div><div class="label">USERS</div></div>
+  <div class="stat-card"><div class="value">{{ avg_daily }}</div><div class="label">AVG/DAY</div></div>
+  <div class="stat-card"><div class="value">{{ members|length }}</div><div class="label">ACTIVE</div></div>
+</div>
+
+{% if ai_summary %}
+<div class="section">
+  <div class="section-title">// SUMMARY</div>
+  <div class="summary-text">{{ ai_summary }}</div>
+  {% if ai_topics %}
+  <div style="margin-top: 8px;">
+    {% for topic in ai_topics[:5] %}
+    <div class="topic-item">
+      <div class="topic-name">&gt; {{ topic.name }}</div>
+      <div class="topic-desc">{{ topic.description }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if hourly_svg or daily_svg %}
+<div class="section">
+  <div class="section-title">// ACTIVITY</div>
+  {% if hourly_svg %}<div class="chart-area">{{ hourly_svg|safe }}</div>{% endif %}
+  {% if daily_svg %}<div class="chart-area">{{ daily_svg|safe }}</div>{% endif %}
+</div>
+{% endif %}
+
+{% if members %}
+<div class="section">
+  <div class="section-title">// LEADERBOARD</div>
+  {% for m in members[:10] %}
+  <div class="member-row">
+    <div class="member-rank {% if m.rank == 1 %}rank-1{% elif m.rank == 2 %}rank-2{% elif m.rank == 3 %}rank-3{% else %}rank-other{% endif %}">{{ m.rank }}</div>
+    <div class="member-name">{{ m.name }}</div>
+    <div class="member-bar">{{ m.bar_svg|safe }}</div>
+    <div class="member-count">{{ m.count }} ({{ m.percentage }}%)</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if ai_titles %}
+<div class="section">
+  <div class="section-title">// USER_PROFILES</div>
+  <div class="title-grid">
+    {% for t in ai_titles[:8] %}
+    <div class="title-card">
+      <div><span class="name">{{ t.avatar }} {{ t.name }}</span><span class="badge">[{{ t.title }}]</span></div>
+      <div class="mbti">{{ t.mbti }} · {{ t.sbti }}</div>
+      <div class="reason">{{ t.reason }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if ai_quotes %}
+<div class="section">
+  <div class="section-title">// QUOTES</div>
+  {% for q in ai_quotes[:6] %}
+  <div class="quote-card">
+    <div class="content">"{{ q.content }}"</div>
+    <div class="meta">-- {{ q.avatar }} {{ q.sender }} · {{ q.reason }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if ai_quality_title %}
+<div class="section">
+  <div class="section-title">// QUALITY_METRICS</div>
+  <div class="quality-title">{{ ai_quality_title }}</div>
+  <div class="quality-subtitle">{{ ai_quality_subtitle }}</div>
+  {% for d in ai_quality_dims %}
+  <div class="quality-dim">
+    <div class="dim-name">{{ d.name }}</div>
+    <div class="dim-bar">{{ d.bar_svg|safe }}</div>
+    <div class="dim-pct">{{ d.percentage }}%</div>
+    <div class="dim-comment">{{ d.comment }}</div>
+  </div>
+  {% endfor %}
+  {% if ai_quality_summary %}<div class="quality-summary">{{ ai_quality_summary }}</div>{% endif %}
+</div>
+{% endif %}
+
+{% if ai_keywords %}
+<div class="section">
+  <div class="section-title">// KEYWORDS</div>
+  <div class="keyword-tags">
+    {% for kw in ai_keywords[:15] %}
+    <span class="keyword-tag">{{ kw.word }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if msg_type_svg %}
+<div class="section">
+  <div class="section-title">// MSG_TYPES</div>
+  <div class="chart-area">{{ msg_type_svg|safe }}</div>
+</div>
+{% endif %}
+
+<div class="footer">CHATLENS://{{ generated_at }}</div>
+
+</body>
+</html>

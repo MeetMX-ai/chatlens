@@ -1,0 +1,28 @@
+{
+  "ai_service": {
+    "provider": "",
+    "api_key": "YOUR_NVAPI_KEY_HERE",
+    "base_url": "https://integrate.api.nvidia.com/v1",
+    "model": "stepfun-ai/step-3.7-flash",
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "max_tokens": 128000,
+    "concurrent_workers": 1,
+    "enable_thinking": false,
+    "ai_timeout": 180
+  },
+  "server": {
+    "host": "localhost",
+    "port": 8080
+  },
+  "chatlog": {
+    "api_base": "http://localhost:5030"
+  },
+  "ide": {
+    "webhook_url": ""
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "logs/chatlens.log"
+  }
+}
