@@ -18,7 +18,9 @@ class MessageProvider(Protocol):
 
     def get_groups(self) -> List[str]: ...
 
-    def get_messages(self, talker: str, limit: int = 0) -> List[ChatMessage]: ...
+    def get_messages(
+        self, talker: str, limit: int = 0, start_date: str = "", end_date: str = ""
+    ) -> List[ChatMessage]: ...
 
     def get_display_name(self, username: str) -> str: ...
 
@@ -75,8 +77,12 @@ class WechatProvider:
         rooms = self._bridge.get_chatrooms()
         return [r["name"] for r in rooms]
 
-    def get_messages(self, talker: str, limit: int = 0) -> List[ChatMessage]:
-        return self._bridge.get_messages(talker, limit)
+    def get_messages(
+        self, talker: str, limit: int = 0, start_date: str = "", end_date: str = ""
+    ) -> List[ChatMessage]:
+        return self._bridge.get_messages(
+            talker, limit, start_date=start_date, end_date=end_date
+        )
 
     def get_display_name(self, username: str) -> str:
         return self._bridge._get_display_name(username)

@@ -563,7 +563,9 @@ class ChatlogBridge:
             logger.error(f"获取 talker 列表失败: {e}")
             return []
 
-    def get_messages(self, talker: str, limit: int = 0) -> List[ChatMessage]:
+    def get_messages(
+        self, talker: str, limit: int = 0, start_date: str = "", end_date: str = ""
+    ) -> List[ChatMessage]:
         db = self._get_msg_db()
         if not db:
             return []
@@ -589,6 +591,24 @@ class ChatlogBridge:
                 LEFT JOIN Name2Id n ON m.real_sender_id = n.rowid
                 ORDER BY m.sort_seq ASC
             """
+            if start_date or end_date:
+                conditions = []
+                if start_date:
+                    try:
+                        start_ts = int(datetime.strptime(start_date, "%Y-%m-%d").timestamp())
+                        conditions.append(f"m.create_time >= {start_ts}")
+                    except ValueError:
+                        pass
+                if end_date:
+                    try:
+                        end_ts = int(datetime.strptime(end_date, "%Y-%m-%d").timestamp()) + 86399
+                        conditions.append(f"m.create_time <= {end_ts}")
+                    except ValueError:
+                        pass
+                if conditions:
+                    query = query.replace(
+                        "ORDER BY", "WHERE " + " AND ".join(conditions) + " ORDER BY"
+                    )
             if limit > 0:
                 query += f" LIMIT {limit}"
 

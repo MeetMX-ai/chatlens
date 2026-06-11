@@ -99,17 +99,17 @@ wxcli groups
 wxcli chatlog talkers
 
 # 从 chatlog 加载群聊消息
-wxcli chatlog load 58691893801@chatroom
+wxcli chatlog load <chatroom_id>@chatroom
 
 # 解密微信数据库
 wxcli chatlog decrypt
 
 # 分析群聊并生成报告
-wxcli analyze "HR·AI黑客松2群" --theme scrapbook --format html
-wxcli analyze "HR·AI黑客松2群" --start-date 2026-01-01 --end-date 2026-05-31
+wxcli analyze "<group_name>" --theme scrapbook --format html
+wxcli analyze "<group_name>" --start-date 2026-01-01 --end-date 2026-05-31
 
 # 定时任务管理
-wxcli schedule create "HR·AI黑客松2群" --hour 9 --minute 0
+wxcli schedule create "<group_name>" --hour 9 --minute 0
 wxcli schedule list
 wxcli schedule trigger <task_id>
 wxcli schedule delete <task_id>

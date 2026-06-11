@@ -744,12 +744,15 @@ def create_app(ga: Any = None) -> FastAPI:
         fmt = body.get("fmt", "jpg")
         use_ide = body.get("use_ide", False)
         generate_image = bool(body.get("generate_image", False))
+        start_date = body.get("start_date", "")
+        end_date = body.get("end_date", "")
         from chatlens.plugins.web.analysis_orchestrator import (
             submit_report_image_task,
         )
         orchestrator = _web.orchestrator
         task_id = submit_report_image_task(
-            orchestrator, group_name, theme, fmt.lower(), use_ide, generate_image
+            orchestrator, group_name, theme, fmt.lower(), use_ide, generate_image,
+            start_date=start_date, end_date=end_date
         )
         return {
             "success": True,
@@ -932,7 +935,11 @@ def create_app(ga: Any = None) -> FastAPI:
             return {"success": False}
         body = await request.json()
         return await _run_sync(
-            _web.load_from_chatlog, body.get("talker", ""), int(body.get("limit", 0))
+            _web.load_from_chatlog,
+            body.get("talker", ""),
+            int(body.get("limit", 0)),
+            start_date=body.get("start_date", ""),
+            end_date=body.get("end_date", ""),
         )
 
     @app.post("/api/analysis/auto", summary="自动分析", tags=["分析"])
@@ -964,6 +971,8 @@ def create_app(ga: Any = None) -> FastAPI:
             body.get("group_name", ""),
             use_rules=body.get("use_rules", False),
             use_ide=body.get("use_ide", False),
+            start_date=body.get("start_date", ""),
+            end_date=body.get("end_date", ""),
         )
         # AC2：当 error_code = API_KEY_NOT_CONFIGURED 时抛业务异常 → 400
         if (

@@ -104,27 +104,42 @@ class AnalysisOrchestrator:
         # key: (group_name, theme, fmt, ai_data_md5)
         self._report_cache: Dict[tuple, tuple] = {}  # (payload, ts)
 
-    def get_stats(self, group_name: str) -> Dict[str, Any]:
+    def get_stats(self, group_name: str, start_date: str = "", end_date: str = "") -> Dict[str, Any]:
         now = time.time()
         # 清理过期缓存
         expired = [k for k, t in self._stats_cache_time.items() if now - t > _CACHE_TTL]
         for k in expired:
             self._stats_cache.pop(k, None)
             self._stats_cache_time.pop(k, None)
-        if group_name in self._stats_cache:
-            cached_at = self._stats_cache_time.get(group_name, 0)
+        cache_key = (group_name, start_date, end_date)
+        if cache_key in self._stats_cache:
+            cached_at = self._stats_cache_time.get(cache_key, 0)
             if now - cached_at < _CACHE_TTL:
-                return {"success": True, "data": self._stats_cache[group_name]}
+                return {"success": True, "data": self._stats_cache[cache_key]}
         messages = self.ga.get_messages(group_name)
+        # Apply date range filter
+        if start_date or end_date:
+            filtered = []
+            for m in (messages or []):
+                ts = (getattr(m, "timestamp", "") or "")[:10]
+                if start_date and ts < start_date:
+                    continue
+                if end_date and ts > end_date:
+                    continue
+                filtered.append(m)
+            messages = filtered
         result = self.ga.stats_analyzer.analyze(messages or [])
         result = self._normalize_stats(result)
-        self._stats_cache[group_name] = result
-        self._stats_cache_time[group_name] = now
+        self._stats_cache[cache_key] = result
+        self._stats_cache_time[cache_key] = now
         return {"success": True, "data": result}
 
     def invalidate_cache(self, group_name: str) -> None:
-        self._stats_cache.pop(group_name, None)
-        self._stats_cache_time.pop(group_name, None)
+        # _stats_cache keys are now tuples (group_name, start_date, end_date)
+        stale_stats = [k for k in self._stats_cache if (k[0] if isinstance(k, tuple) else k) == group_name]
+        for k in stale_stats:
+            self._stats_cache.pop(k, None)
+            self._stats_cache_time.pop(k, None)
         self._rule_cache.pop(group_name, None)
         self._rule_cache_time.pop(group_name, None)
         # 同时清掉该群相关的 ai 缓存
@@ -185,7 +200,7 @@ class AnalysisOrchestrator:
                     method = "rules_fallback"
             report_info: Dict[str, Any] = {}
             if not skip_report:
-                report_info = self._generate_report(group_name, result, theme, fmt)
+                report_info = self._generate_report(group_name, result, theme, fmt, start_date, end_date)
             payload = {
                 "success": True,
                 "data": result,
@@ -238,10 +253,10 @@ class AnalysisOrchestrator:
                         # 即使实际走 rules 也保留 method="ide" 标识，
                         # 让前端知道结果来自 IDE 模式（IDE 任务由 IDE 客户端进一步覆盖）
                         method = "ide"
-                        stats_result = self.get_stats(group_name)
+                        stats_result = self.get_stats(group_name, start_date, end_date)
                         if stats_result.get("success"):
                             report_info = self._generate_report(
-                                group_name, ai_data, theme, fmt
+                                group_name, ai_data, theme, fmt, start_date, end_date
                             )
                         else:
                             report_info = {}
@@ -268,10 +283,10 @@ class AnalysisOrchestrator:
             if use_rules:
                 ai_data = rule_based_analysis(messages)
                 method = "rules"
-                stats_result = self.get_stats(group_name)
+                stats_result = self.get_stats(group_name, start_date, end_date)
                 if not stats_result.get("success"):
                     return stats_result
-                report_info = self._generate_report(group_name, ai_data, theme, fmt)
+                report_info = self._generate_report(group_name, ai_data, theme, fmt, start_date, end_date)
                 return {
                     "success": True,
                     "method": method,
@@ -296,10 +311,10 @@ class AnalysisOrchestrator:
                         }
                     ai_data = rule_based_analysis(messages)
                     method = "rules"
-                stats_result = self.get_stats(group_name)
+                stats_result = self.get_stats(group_name, start_date, end_date)
                 if not stats_result.get("success"):
                     return stats_result
-                report_info = self._generate_report(group_name, ai_data, theme, fmt)
+                report_info = self._generate_report(group_name, ai_data, theme, fmt, start_date, end_date)
                 return {
                     "success": True,
                     "method": method,
@@ -337,10 +352,10 @@ class AnalysisOrchestrator:
                         }
                     ai_data = rule_based_analysis(messages)
                     method = "rules"
-            stats_result = self.get_stats(group_name)
+            stats_result = self.get_stats(group_name, start_date, end_date)
             if not stats_result.get("success"):
                 return stats_result
-            report_info = self._generate_report(group_name, ai_data, theme, fmt)
+            report_info = self._generate_report(group_name, ai_data, theme, fmt, start_date, end_date)
             return {
                 "success": True,
                 "method": method,
@@ -540,11 +555,11 @@ class AnalysisOrchestrator:
         return filtered
 
     def _generate_report(
-        self, group_name: str, ai_data: Dict[str, Any], theme: str, fmt: str
+        self, group_name: str, ai_data: Dict[str, Any], theme: str, fmt: str, start_date: str = "", end_date: str = ""
     ) -> Dict[str, Any]:
         if not hasattr(self.ga, "report") or not self.ga.report:
             return {}
-        stats_result = self.get_stats(group_name)
+        stats_result = self.get_stats(group_name, start_date, end_date)
         if not stats_result.get("success"):
             return {}
         generate_image = fmt in ("jpg", "png")
@@ -723,6 +738,8 @@ class ReportTask:
     result: Optional[Dict[str, _Any]] = None  # 成功结果（image_path/html_path...）
     error: Optional[Dict[str, _Any]] = None    # 失败结果（code/message/hint/stage）
     warnings: List[Dict[str, str]] = field(default_factory=list)  # AI 部分失败时记录到 task 上
+    start_date: str = ""
+    end_date: str = ""
     created_at: float = field(default_factory=time.time)
 
 
@@ -788,6 +805,8 @@ def submit_report_image_task(
     fmt: str = "jpg",
     use_ide: bool = False,
     generate_image: bool = False,
+    start_date: str = "",
+    end_date: str = "",
 ) -> str:
     """提交报告生成任务，立即返回 task_id。后台用线程执行。
 
@@ -805,6 +824,8 @@ def submit_report_image_task(
         fmt=fmt,
         use_ide=use_ide,
         task_type="report",
+        start_date=start_date,
+        end_date=end_date,
     )
     with _report_tasks_lock:
         _report_tasks[task_id] = task
@@ -847,6 +868,18 @@ def _run_report_image_task(
                 hint="请确认 chatlog 服务在线，且该群有聊天记录",
                 code="CHATLOG_NO_MESSAGES",
             )
+
+        # Apply date range filter
+        if task.start_date or task.end_date:
+            filtered = []
+            for m in messages:
+                ts = (getattr(m, "timestamp", "") or "")[:10]
+                if task.start_date and ts < task.start_date:
+                    continue
+                if task.end_date and ts > task.end_date:
+                    continue
+                filtered.append(m)
+            messages = filtered
 
         # 2) 统计分析
         _update_stage(task, "stats", f"聚合 {len(messages)} 条消息...")

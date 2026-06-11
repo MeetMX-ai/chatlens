@@ -493,6 +493,15 @@ document.addEventListener('DOMContentLoaded', () => {
         hideReportProgress();
         if (_reportEs) { try { _reportEs.close(); } catch (e) {} _reportEs = null; }
     };
+    // 修复"关闭模型思考"开关：点击整行（除 input/slider 自身外）切换勾选状态
+    const switchRow = document.querySelector('.switch-row');
+    const etCheckbox = document.getElementById('cfgEnableThinking');
+    if (switchRow && etCheckbox) {
+        switchRow.addEventListener('click', (e) => {
+            if (e.target === etCheckbox || e.target.classList.contains('switch-slider')) return;
+            etCheckbox.checked = !etCheckbox.checked;
+        });
+    }
 });
 
 function getRangeParams() {
@@ -1517,6 +1526,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadGroups(); loadDataFiles(); loadStats();
             switchPage('dashboard');
         } else { showToast('加载失败: '+(res?.error||'未知错误'),'error'); }
+    });
+
+    const dsClearBtn = document.getElementById('btnDsDateClear');
+    if (dsClearBtn) dsClearBtn.addEventListener('click', () => {
+        document.getElementById('dsStartDate').value = '';
+        document.getElementById('dsEndDate').value = '';
     });
 
     document.getElementById('btnChatlogRefresh').addEventListener('click', async () => {

@@ -1,6 +1,39 @@
 # Changelog
 
-本项目的所有重要变更都记录在此文件中。格式基于 [Keep a Changelog](https://keepachangelog.com/)，版本号遵循 [Semantic Versioning](https://semver.org/)。
+本项目的所有重要变更都记录在此文件中。格式基于 [Keep a Changelog](https://keepachangelog.com/)。
+
+## [1.2.0] — 2026-06-11
+
+### 新增
+
+- **数据源页面日期范围过滤**（`/api/chatlog/load` 链路）：在数据源页面的"从 chatlog 加载"区域新增"起始日期 / 结束日期"选择器和"清除"按钮；后端 5 个文件全链路透传 `start_date` / `end_date` 参数
+  - `chatlog_bridge.get_messages()` 在 SQL 层动态插入 `WHERE m.create_time >= ? AND m.create_time <= ?` 子句，过滤在数据库层完成，避免加载全量数据
+  - `end_date` 自动 +86399 秒以包含整个结束日
+  - 日期格式 `YYYY-MM-DD`，可选；不选 = 加载全部（向后兼容）
+  - 前端做日期合法性校验（起始 > 结束给出错误提示）
+- **报告生成日期范围过滤**（v1.1 修复合并）：之前选择一个月但生成了全部月份的报告，根因是 `/api/report/image/submit`、`get_stats()`、`_generate_report()` 都没有真正应用日期过滤
+  - 修复后 `ReportTask` 携带 `start_date` / `end_date`，`_run_report_image_task()` / `get_stats()` / `_generate_report()` / `auto_analyze()` / `get_ai_analysis()` 全部链路透传
+  - 验证：全量 1609 条 / 2026-05 一个月 1282 条 / 2026-06-04~11 一周 129 条
+- **设置页面"关闭模型思考"开关修复**：之前 `<label>` 嵌套导致"关闭思考"文字和开关 UI 重叠；改为 flex 容器同一行布局，新增 `.switch-row-label` 样式，整行点击可切换（不依赖外层 label 自动绑定）
+
+### 修复
+
+- **设置页关闭思考 toggle 重叠**（`index.html:407-415` + `style.css:621` + `app.js:496-504`）：移除嵌套 `<label>`，把"关闭思考"和"启用模型 CoT 思考"改为同一 flex 行；点击非开关区域也能切换勾选
+- **`get_stats()` 缓存 key 适配日期参数**（`analysis_orchestrator.py:107-135`）：从字符串 key 改为 `(group_name, start_date, end_date)` 元组 key，相同群不同日期范围不互相污染
+- **`invalidate_cache()` 缓存清理兼容元组 key**（`analysis_orchestrator.py:137-142`）：遍历匹配 `k[0] == group_name` 时兼容 str 和 tuple
+
+### 验证
+
+| 测试场景 | 消息数 |
+|----------|--------|
+| 数据源全量 | 1761 条 |
+| 数据源 2026-05 一个月 | 1282 条 |
+| 数据源 2026-06-04~11 一周 | 281 条 |
+| 报告生成全量 | 1609 条 |
+| 报告生成 2026-05 一个月 | 1282 条 |
+| 报告生成 2026-06-04~11 一周 | 129 条 |
+
+---
 
 ## [1.1.0] — 2026-06-11
 

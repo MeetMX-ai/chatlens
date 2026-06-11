@@ -275,9 +275,13 @@ class WebService:
         except (OSError, ValueError) as e:
             return {"success": False, "error": str(e), "talkers": []}
 
-    def load_from_chatlog(self, talker: str, limit: int = 0) -> Dict[str, Any]:
+    def load_from_chatlog(
+        self, talker: str, limit: int = 0, start_date: str = "", end_date: str = ""
+    ) -> Dict[str, Any]:
         try:
-            messages = self.ga.load_from_provider(talker, "wechat", limit)
+            messages = self.ga.load_from_provider(
+                talker, "wechat", limit, start_date=start_date, end_date=end_date
+            )
             if not messages:
                 return {"success": False, "error": f"未找到 {talker} 的消息"}
             self.ga.save_loaded(talker, messages)

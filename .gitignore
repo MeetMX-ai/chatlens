@@ -33,6 +33,7 @@ desktop.ini
 # Project runtime
 config/config.json
 chatlens/config/config.json
+chatlens/config/ilink_token.json
 config/scheduled_tasks.json
 config/logs/
 data/

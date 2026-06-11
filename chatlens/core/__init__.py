@@ -277,7 +277,12 @@ class GroupAnalysis:
         return self.chatlog
 
     def load_from_provider(
-        self, talker: str, provider_name: str = "wechat", limit: int = 0
+        self,
+        talker: str,
+        provider_name: str = "wechat",
+        limit: int = 0,
+        start_date: str = "",
+        end_date: str = "",
     ) -> List[ChatMessage]:
         """通用 provider 加载方法 — 从指定平台 provider 获取消息"""
         provider = (
@@ -285,7 +290,9 @@ class GroupAnalysis:
         )
         if not provider:
             return []
-        messages = provider.get_messages(talker, limit)
+        messages = provider.get_messages(
+            talker, limit, start_date=start_date, end_date=end_date
+        )
         if messages:
             self.collector_data[talker] = messages
         return messages

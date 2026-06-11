@@ -1,8 +1,0 @@
-{
-  "bot_token": "t",
-  "ilink_bot_id": "",
-  "ilink_user_id": "",
-  "context_tokens": {
-    "user1@im.wechat": "ctx_token_1"
-  }
-}
